@@ -10,22 +10,33 @@ const FNSL_CONFIG = {
   currentSeason: "Season 3",
   defendingChamp: "Las Vegas Raiders",
 
-  // Twitch usernames of owners (optional – for future auto-live detection)
+  // =========================================================
+  // AUTOMATIC LIVE DETECTION
+  // Put every owner’s Twitch username here (no https://)
+  // The app will automatically check who is live and show them.
+  // =========================================================
   twitchChannels: [
-    // "your_twitch",
+    // "your_twitch_username",
+    // "another_owner_twitch",
+    // "third_owner",
   ],
 
-  // Featured / current streams – set isLive: true when someone is actually streaming
+  // =========================================================
+  // FEATURED / MANUAL STREAMS (optional but recommended)
+  // These always appear in the list.
+  // If the channel is also in twitchChannels above, the app
+  // will automatically set isLive based on Twitch.
+  // =========================================================
   featuredStreams: [
     {
       id: "raiders-home",
       title: "Las Vegas Raiders • Home Stream",
       owner: "Dustin (Owner / Coach)",
       platform: "twitch",
-      channel: "",                 // put your Twitch username here
-      isLive: false
-    },
-    // Add more owner streams the same way
+      channel: "",                 // put your Twitch username here (same as in twitchChannels)
+      isLive: false                // will be overridden automatically if channel is live
+    }
+    // Add more owners the same way
   ],
 
   // Past VODs – add real YouTube video IDs when you upload games / draft shows
@@ -37,7 +48,7 @@ const FNSL_CONFIG = {
       type: "superbowl",
       season: "1",
       platform: "youtube",
-      videoId: "",                 // paste YouTube ID here
+      videoId: "",
       date: "2025-02-09",
       teams: ["Las Vegas Raiders", "Kansas City Chiefs"]
     },
@@ -65,7 +76,7 @@ const FNSL_CONFIG = {
     }
   ],
 
-  // THIS is the heart of the history feature – fill every season
+  // League History – fill every season
   history: [
     {
       season: 1,
@@ -85,10 +96,9 @@ const FNSL_CONFIG = {
       mvp: "",
       notes: ""
     }
-    // Add Season 3, 4, etc. as you play them
   ],
 
-  // Update these weekly (or after every advance)
+  // Standings – update weekly
   standings: {
     afc: [
       { team: "Las Vegas Raiders", record: "0-0", owner: "Dustin" },

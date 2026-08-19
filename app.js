@@ -1,21 +1,29 @@
 // ============================================================
 // FNSL TV - Application Logic
 // Optimized for LG webOS / Smart TVs + modern browsers
+// Now with automatic Twitch live detection
 // ============================================================
 
 let currentSection = 'live';
 let filteredVods = [];
+let liveStatusCache = {};       // { username: { isLive, title, viewerCount, ... } }
+let lastLiveCheck = 0;
 
 // ---------- INIT ----------
 document.addEventListener('DOMContentLoaded', () => {
   applyConfig();
-  renderLiveStreams();
   renderVods();
   renderHistory();
   renderStandings();
   showSection('live');
   setupKeyboardNav();
-  updateLiveBadge();
+
+  // First render (manual flags), then try auto-detect
+  renderLiveStreams();
+  checkLiveStreams();
+
+  // Re-check every 60 seconds
+  setInterval(checkLiveStreams, 60 * 1000);
 });
 
 // ---------- CONFIG APPLY ----------
@@ -31,7 +39,6 @@ function showSection(name) {
   const el = document.getElementById('section-' + name);
   if (el) el.classList.remove('hidden');
 
-  // Update nav active state
   document.querySelectorAll('.nav-btn[data-section]').forEach(btn => {
     if (btn.dataset.section === name) {
       btn.classList.add('bg-green-600/20', 'text-green-400');
@@ -40,8 +47,49 @@ function showSection(name) {
     }
   });
 
-  // Scroll to top for TV experience
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ---------- AUTOMATIC LIVE CHECK ----------
+async function checkLiveStreams() {
+  const channels = (FNSL_CONFIG.twitchChannels || [])
+    .map(c => c.trim().toLowerCase())
+    .filter(Boolean);
+
+  // Also include any channels listed in featuredStreams
+  (FNSL_CONFIG.featuredStreams || []).forEach(s => {
+    if (s.channel && s.platform === 'twitch') {
+      const name = s.channel.trim().toLowerCase();
+      if (name && !channels.includes(name)) channels.push(name);
+    }
+  });
+
+  if (channels.length === 0) {
+    renderLiveStreams();
+    return;
+  }
+
+  const statusText = document.getElementById('live-status-text');
+  if (statusText) statusText.textContent = 'Checking who is live…';
+
+  try {
+    const url = `/api/live?channels=${encodeURIComponent(channels.join(','))}`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    liveStatusCache = {};
+    if (data.ok && Array.isArray(data.live)) {
+      data.live.forEach(s => {
+        liveStatusCache[s.login.toLowerCase()] = s;
+      });
+    }
+
+    lastLiveCheck = Date.now();
+    renderLiveStreams();
+  } catch (err) {
+    console.warn('Live check failed (will use manual isLive flags):', err);
+    renderLiveStreams();
+  }
 }
 
 // ---------- LIVE STREAMS ----------
@@ -52,20 +100,62 @@ function renderLiveStreams() {
 
   container.innerHTML = '';
 
-  // Combine featured + any auto-detected
-  const streams = [...(FNSL_CONFIG.featuredStreams || [])];
+  // Build the list of streams to show
+  let streams = [...(FNSL_CONFIG.featuredStreams || [])];
 
-  // If you later add Twitch Helix API with a client-id, you can auto-detect live status here.
-  // For now we rely on the isLive flag you set in data.js
+  // Apply automatic live status
+  streams = streams.map(s => {
+    const channel = (s.channel || '').trim().toLowerCase();
+    const liveInfo = liveStatusCache[channel];
+
+    if (liveInfo) {
+      return {
+        ...s,
+        isLive: true,
+        title: liveInfo.title || s.title,
+        viewerCount: liveInfo.viewerCount,
+        thumbnail: liveInfo.thumbnail || s.thumbnail,
+        startedAt: liveInfo.startedAt
+      };
+    }
+
+    // If we successfully checked and they are NOT in the live list → force offline
+    // (only if we have a channel name and we did a real check)
+    if (channel && Object.keys(liveStatusCache).length > 0 || lastLiveCheck > 0) {
+      // Keep the original isLive if we never got a successful API response
+      // but if API worked, override to false when not live
+      if (lastLiveCheck > 0) {
+        return { ...s, isLive: false };
+      }
+    }
+
+    return s;
+  });
+
+  // Also add any live channels that were in twitchChannels but not in featuredStreams
+  Object.values(liveStatusCache).forEach(liveInfo => {
+    const already = streams.some(s => (s.channel || '').toLowerCase() === liveInfo.login.toLowerCase());
+    if (!already) {
+      streams.push({
+        id: liveInfo.login,
+        title: liveInfo.title || `${liveInfo.displayName} is live`,
+        owner: liveInfo.displayName,
+        platform: 'twitch',
+        channel: liveInfo.login,
+        isLive: true,
+        viewerCount: liveInfo.viewerCount,
+        thumbnail: liveInfo.thumbnail
+      });
+    }
+  });
 
   const liveOnes = streams.filter(s => s.isLive);
   const offlineOnes = streams.filter(s => !s.isLive);
 
   if (liveOnes.length === 0 && offlineOnes.length === 0) {
     noLive.classList.remove('hidden');
-    statusText.textContent = 'No streams configured yet';
-    document.getElementById('live-badge').classList.add('hidden');
-    document.getElementById('live-badge').classList.remove('flex');
+    statusText.textContent = 'No streams configured yet — add usernames in data.js';
+    updateLiveBadge(0);
     return;
   }
 
@@ -73,23 +163,24 @@ function renderLiveStreams() {
 
   // Show live first
   [...liveOnes, ...offlineOnes].forEach(stream => {
-    const card = createStreamCard(stream, true);
-    container.appendChild(card);
+    container.appendChild(createStreamCard(stream));
   });
 
   statusText.textContent = liveOnes.length > 0
     ? `${liveOnes.length} stream${liveOnes.length > 1 ? 's' : ''} live right now`
     : 'No one is live — check VODs or come back later';
+
+  updateLiveBadge(liveOnes.length);
 }
 
-function createStreamCard(stream, isLiveSection = false) {
+function createStreamCard(stream) {
   const card = document.createElement('div');
   card.className = 'stream-card tv-card rounded-2xl bg-fnsl-card border border-slate-800 overflow-hidden cursor-pointer group focus:outline-none';
   card.tabIndex = 0;
   card.setAttribute('role', 'button');
 
   const isLive = stream.isLive;
-  const thumb = stream.thumbnail || `https://static-cdn.jtvnw.net/previews-ttv/live_user_${stream.channel || 'placeholder'}-440x248.jpg`;
+  const viewers = stream.viewerCount ? `${stream.viewerCount} watching` : '';
 
   card.innerHTML = `
     <div class="relative aspect-video bg-slate-900 overflow-hidden">
@@ -114,7 +205,10 @@ function createStreamCard(stream, isLiveSection = false) {
     <div class="p-4">
       <h3 class="font-bold text-lg leading-tight line-clamp-2">${escapeHtml(stream.title || 'Untitled Stream')}</h3>
       <p class="text-slate-400 text-sm mt-1">${escapeHtml(stream.owner || stream.channel || '')}</p>
-      <p class="text-xs text-slate-500 mt-2 uppercase tracking-wide">${stream.platform || 'stream'}</p>
+      <div class="flex items-center justify-between mt-2 text-xs text-slate-500">
+        <span class="uppercase tracking-wide">${stream.platform || 'stream'}</span>
+        <span>${viewers}</span>
+      </div>
     </div>
   `;
 
@@ -156,7 +250,6 @@ function openStream(stream) {
       style="border:none;">
     </iframe>`;
   } else if (stream.url) {
-    // Fallback: open in new tab
     window.open(stream.url, '_blank');
     return;
   } else {
@@ -180,28 +273,38 @@ function closePlayer() {
 }
 
 function playAllLive() {
-  const live = (FNSL_CONFIG.featuredStreams || []).filter(s => s.isLive);
-  if (live.length === 0) {
-    alert('No live streams right now. Add streams with isLive: true in data.js');
+  const live = (FNSL_CONFIG.featuredStreams || []).filter(s => {
+    const channel = (s.channel || '').toLowerCase();
+    return s.isLive || liveStatusCache[channel];
+  });
+
+  // Also include pure auto-detected ones
+  const autoLive = Object.values(liveStatusCache).map(l => ({
+    channel: l.login,
+    title: l.title,
+    platform: 'twitch',
+    isLive: true
+  }));
+
+  const allLive = [...live, ...autoLive];
+  if (allLive.length === 0) {
+    alert('No live streams right now.');
     return;
   }
-  // For simplicity open the first one. Multi-view would need more complex layout.
-  openStream(live[0]);
+  openStream(allLive[0]);
 }
 
 function refreshStreams() {
-  renderLiveStreams();
-  updateLiveBadge();
+  checkLiveStreams();
 }
 
-function updateLiveBadge() {
-  const liveCount = (FNSL_CONFIG.featuredStreams || []).filter(s => s.isLive).length;
+function updateLiveBadge(count) {
   const badge = document.getElementById('live-badge');
   const countEl = document.getElementById('live-count');
-  if (liveCount > 0) {
+  if (count > 0) {
     badge.classList.remove('hidden');
     badge.classList.add('flex');
-    countEl.textContent = `${liveCount} LIVE`;
+    countEl.textContent = `${count} LIVE`;
   } else {
     badge.classList.add('hidden');
     badge.classList.remove('flex');
@@ -326,7 +429,6 @@ function renderHistory() {
     });
   }
 
-  // Titles leaderboard
   const leaderboard = document.getElementById('titles-leaderboard');
   leaderboard.innerHTML = '';
   const titles = getTitleCounts();
@@ -362,7 +464,6 @@ function renderConf(conf, teams) {
     return;
   }
 
-  // Sort by wins (simple parse of W-L)
   const sorted = [...teams].sort((a, b) => {
     const [aw] = (a.record || '0-0').split('-').map(Number);
     const [bw] = (b.record || '0-0').split('-').map(Number);
@@ -388,16 +489,8 @@ function renderConf(conf, teams) {
 
 // ---------- TV / KEYBOARD NAV ----------
 function setupKeyboardNav() {
-  // Basic arrow-key focus movement for TV remotes
   document.addEventListener('keydown', (e) => {
-    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-      // Let the browser handle focus naturally with tabIndex elements
-      // Extra polish can be added later with a focus ring manager
-    }
-    if (e.key === 'Escape') {
-      closePlayer();
-    }
-    // Number keys for quick section switch (TV remote friendly)
+    if (e.key === 'Escape') closePlayer();
     if (e.key === '1') showSection('live');
     if (e.key === '2') showSection('vods');
     if (e.key === '3') showSection('history');
@@ -432,3 +525,4 @@ window.filterVods = filterVods;
 window.closePlayer = closePlayer;
 window.toggleFullscreen = toggleFullscreen;
 window.openStream = openStream;
+window.checkLiveStreams = checkLiveStreams;

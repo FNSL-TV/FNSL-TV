@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <meta name="description" content="FNSL TV - Father N Son League streaming, history, and VODs. The ultimate Madden franchise league experience." />
+  <title>FNSL TV • Father N Son League</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            fnsl: {
+              bg: '#0a0a0f',
+              card: '#12121a',
+              accent: '#22c55e',
+              accent2: '#3b82f6',
+              gold: '#fbbf24',
+              muted: '#94a3b8'
+            }
+          },
+          fontFamily: {
+            display: ['Inter', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      background: #0a0a0f;
+      color: #e2e8f0;
+      font-family: 'Inter', system-ui, sans-serif;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    /* TV-friendly focus styles */
+    :focus-visible {
+      outline: 3px solid #22c55e;
+      outline-offset: 4px;
+    }
+    .tv-card:focus-visible, .nav-btn:focus-visible, .stream-card:focus-visible {
+      transform: scale(1.03);
+      box-shadow: 0 0 0 3px #22c55e, 0 20px 40px rgba(34, 197, 94, 0.15);
+    }
+    .stream-card, .tv-card, .nav-btn, button, a {
+      transition: all 0.2s ease;
+    }
+    /* Smooth scrolling for remote */
+    html { scroll-behavior: smooth; }
+    /* Hide scrollbar but keep functionality */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #0a0a0f; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #22c55e; }
+    /* Live pulse */
+    .live-dot {
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    /* Fullscreen player overlay */
+    #player-overlay {
+      display: none;
+    }
+    #player-overlay.active {
+      display: flex;
+    }
+    /* Grid for streams optimized for TV */
+    .streams-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+    @media (min-width: 1920px) {
+      .streams-grid {
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      }
+    }
+  </style>
+</head>
+<body class="bg-fnsl-bg text-slate-100 min-h-screen">
+
+  <!-- Top Nav -->
+  <header class="sticky top-0 z-50 bg-fnsl-bg/95 backdrop-blur-md border-b border-slate-800">
+    <div class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 md:h-20">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-700 flex items-center justify-center font-black text-xl shadow-lg shadow-green-500/20">
+            F
+          </div>
+          <div>
+            <h1 class="text-xl md:text-2xl font-black tracking-tight">FNSL <span class="text-green-400">TV</span></h1>
+            <p class="text-xs text-slate-400 hidden sm:block">Father N Son League • Est. 20XX</p>
+          </div>
+        </div>
+
+        <nav class="hidden md:flex items-center gap-1">
+          <button onclick="showSection('live')" class="nav-btn px-4 py-2 rounded-lg font-semibold text-sm hover:bg-slate-800 focus:bg-slate-800" data-section="live">Live</button>
+          <button onclick="showSection('vods')" class="nav-btn px-4 py-2 rounded-lg font-semibold text-sm hover:bg-slate-800 focus:bg-slate-800" data-section="vods">VODs</button>
+          <button onclick="showSection('history')" class="nav-btn px-4 py-2 rounded-lg font-semibold text-sm hover:bg-slate-800 focus:bg-slate-800" data-section="history">History</button>
+          <button onclick="showSection('standings')" class="nav-btn px-4 py-2 rounded-lg font-semibold text-sm hover:bg-slate-800 focus:bg-slate-800" data-section="standings">Standings</button>
+        </nav>
+
+        <div class="flex items-center gap-3">
+          <div id="live-badge" class="hidden items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/20 border border-red-500/40">
+            <span class="w-2 h-2 rounded-full bg-red-500 live-dot"></span>
+            <span class="text-sm font-bold text-red-400" id="live-count">0 LIVE</span>
+          </div>
+          <button onclick="toggleFullscreen()" class="nav-btn p-2 rounded-lg hover:bg-slate-800" title="Fullscreen" aria-label="Toggle fullscreen">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Nav -->
+  <div class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-fnsl-card border-t border-slate-800 flex justify-around py-2">
+    <button onclick="showSection('live')" class="nav-btn flex flex-col items-center gap-1 px-3 py-2 text-xs font-medium" data-section="live">
+      <span class="text-lg">📡</span> Live
+    </button>
+    <button onclick="showSection('vods')" class="nav-btn flex flex-col items-center gap-1 px-3 py-2 text-xs font-medium" data-section="vods">
+      <span class="text-lg">📼</span> VODs
+    </button>
+    <button onclick="showSection('history')" class="nav-btn flex flex-col items-center gap-1 px-3 py-2 text-xs font-medium" data-section="history">
+      <span class="text-lg">🏆</span> History
+    </button>
+    <button onclick="showSection('standings')" class="nav-btn flex flex-col items-center gap-1 px-3 py-2 text-xs font-medium" data-section="standings">
+      <span class="text-lg">📊</span> Standings
+    </button>
+  </div>
+
+  <main class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 pb-24 md:pb-12 pt-6">
+
+    <!-- HERO / LIVE SECTION -->
+    <section id="section-live" class="section">
+      <div class="mb-8">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+          <div>
+            <h2 class="text-3xl md:text-4xl font-black tracking-tight mb-2">Live Streams</h2>
+            <p class="text-slate-400 text-lg">Watch FNSL games as they happen. The realest father-son Madden experience.</p>
+          </div>
+          <div class="flex gap-3">
+            <button onclick="playAllLive()" class="nav-btn px-5 py-3 rounded-xl bg-green-600 hover:bg-green-500 font-bold text-white shadow-lg shadow-green-600/30 flex items-center gap-2">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/></svg>
+              Play All Live
+            </button>
+          </div>
+        </div>
+
+        <!-- Live status bar -->
+        <div id="live-status" class="rounded-2xl bg-fnsl-card border border-slate-800 p-5 mb-8 flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-slate-800 flex items-center justify-center text-2xl">📺</div>
+            <div>
+              <p class="font-bold text-lg" id="live-status-text">Checking for live streams...</p>
+              <p class="text-slate-400 text-sm">FNSL channels are monitored automatically when configured.</p>
+            </div>
+          </div>
+          <button onclick="refreshStreams()" class="nav-btn px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 font-medium text-sm">
+            Refresh
+          </button>
+        </div>
+
+        <!-- Live streams grid -->
+        <div id="live-streams" class="streams-grid">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Empty state -->
+        <div id="no-live" class="hidden text-center py-16 rounded-2xl border border-dashed border-slate-700 bg-fnsl-card/50">
+          <div class="text-5xl mb-4">😴</div>
+          <h3 class="text-xl font-bold mb-2">No streams currently live</h3>
+          <p class="text-slate-400 max-w-md mx-auto">When league members go live on Twitch, they'll appear here. You can also add channels in the config.</p>
+        </div>
+      </div>
+
+      <!-- Featured / Around the League -->
+      <div class="mt-12">
+        <h3 class="text-2xl font-bold mb-4">Around the FNSL</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="tv-card rounded-2xl bg-fnsl-card border border-slate-800 p-5">
+            <p class="text-xs font-bold text-green-400 uppercase tracking-wider mb-2">Next Game</p>
+            <p class="font-bold text-lg">Configure in data.js</p>
+            <p class="text-slate-400 text-sm mt-1">Add your upcoming matchups here</p>
+          </div>
+          <div class="tv-card rounded-2xl bg-fnsl-card border border-slate-800 p-5">
+            <p class="text-xs font-bold text-blue-400 uppercase tracking-wider mb-2">Season</p>
+            <p class="font-bold text-lg" id="current-season">Season X</p>
+            <p class="text-slate-400 text-sm mt-1">Update in config</p>
+          </div>
+          <div class="tv-card rounded-2xl bg-fnsl-card border border-slate-800 p-5">
+            <p class="text-xs font-bold text-amber-400 uppercase tracking-wider mb-2">Defending Champ</p>
+            <p class="font-bold text-lg" id="defending-champ">—</p>
+            <p class="text-slate-400 text-sm mt-1">From history data</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VODS SECTION -->
+    <section id="section-vods" class="section hidden">
+      <div class="mb-8">
+        <h2 class="text-3xl md:text-4xl font-black tracking-tight mb-2">Past Streams & VODs</h2>
+        <p class="text-slate-400 text-lg mb-6">Relive classic FNSL matchups, draft shows, and Super Bowls.</p>
+
+        <div class="flex flex-wrap gap-3 mb-6">
+          <input type="search" id="vod-search" placeholder="Search VODs by team, week, season..." 
+                 class="flex-1 min-w-[240px] px-4 py-3 rounded-xl bg-fnsl-card border border-slate-700 focus:border-green-500 outline-none text-base"
+                 oninput="filterVods()">
+          <select id="vod-filter" onchange="filterVods()" class="px-4 py-3 rounded-xl bg-fnsl-card border border-slate-700 outline-none">
+            <option value="all">All Types</option>
+            <option value="game">Games</option>
+            <option value="draft">Drafts</option>
+            <option value="show">Shows / Podcasts</option>
+            <option value="superbowl">Super Bowls</option>
+          </select>
+        </div>
+
+        <div id="vod-grid" class="streams-grid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- HISTORY SECTION -->
+    <section id="section-history" class="section hidden">
+      <div class="mb-8">
+        <h2 class="text-3xl md:text-4xl font-black tracking-tight mb-2">League History</h2>
+        <p class="text-slate-400 text-lg mb-6">Every FNSL Super Bowl champion. Build the legacy.</p>
+
+        <!-- Champions table -->
+        <div class="rounded-2xl border border-slate-800 overflow-hidden bg-fnsl-card">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead class="bg-slate-900/80 text-slate-400 text-sm uppercase tracking-wider">
+                <tr>
+                  <th class="px-5 py-4 font-semibold">Season</th>
+                  <th class="px-5 py-4 font-semibold">Super Bowl</th>
+                  <th class="px-5 py-4 font-semibold">Champion</th>
+                  <th class="px-5 py-4 font-semibold">Runner-up</th>
+                  <th class="px-5 py-4 font-semibold">Score</th>
+                  <th class="px-5 py-4 font-semibold">MVP / Notes</th>
+                </tr>
+              </thead>
+              <tbody id="history-tbody" class="divide-y divide-slate-800">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- All-time leaders -->
+        <div class="mt-10">
+          <h3 class="text-2xl font-bold mb-4">All-Time Titles</h3>
+          <div id="titles-leaderboard" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STANDINGS SECTION -->
+    <section id="section-standings" class="section hidden">
+      <div class="mb-8">
+        <h2 class="text-3xl md:text-4xl font-black tracking-tight mb-2">Current Standings</h2>
+        <p class="text-slate-400 text-lg mb-6">Update these from NeonSportz or your league tracker.</p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="rounded-2xl border border-slate-800 bg-fnsl-card overflow-hidden">
+            <div class="px-5 py-4 bg-blue-600/20 border-b border-slate-800">
+              <h3 class="font-bold text-lg text-blue-300">AFC</h3>
+            </div>
+            <div id="standings-afc" class="divide-y divide-slate-800">
+              <!-- Populated -->
+            </div>
+          </div>
+          <div class="rounded-2xl border border-slate-800 bg-fnsl-card overflow-hidden">
+            <div class="px-5 py-4 bg-red-600/20 border-b border-slate-800">
+              <h3 class="font-bold text-lg text-red-300">NFC</h3>
+            </div>
+            <div id="standings-nfc" class="divide-y divide-slate-800">
+              <!-- Populated -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Fullscreen Player Overlay -->
+  <div id="player-overlay" class="fixed inset-0 z-[100] bg-black flex flex-col">
+    <div class="flex items-center justify-between p-4 bg-black/80">
+      <h3 id="player-title" class="font-bold text-lg"></h3>
+      <button onclick="closePlayer()" class="nav-btn p-2 rounded-lg hover:bg-slate-800 text-2xl leading-none">&times;</button>
+    </div>
+    <div class="flex-1 flex items-center justify-center">
+      <div id="player-container" class="w-full h-full max-w-7xl"></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800 py-8 mt-12 hidden md:block">
+    <div class="max-w-[1800px] mx-auto px-6 text-center text-slate-500 text-sm">
+      <p>FNSL TV • Built for the Father N Son League</p>
+      <p class="mt-1">Optimized for LG webOS / Smart TVs • Arrow keys + Enter to navigate</p>
+    </div>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

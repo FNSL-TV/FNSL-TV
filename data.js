@@ -295,7 +295,19 @@ const FNSL_CONFIG = {
   // =========================================================
   // PAST VODs (add YouTube IDs later as you upload them)
   // =========================================================
-  vods: 
+  vods: [
+    {
+      id: "vod-1",
+      title: "FNSL Stream / Game VOD",
+      description: "Uploaded FNSL content",
+      type: "game",
+      season: "58",
+      platform: "youtube",
+      videoId: "-Uu0btkah3Y",
+      date: "2026-08-19",
+      teams: []
+    }
+  ],
 
   // =========================================================
   // LEAGUE HISTORY – All 57 Super Bowls locked in

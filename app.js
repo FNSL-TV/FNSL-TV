@@ -208,7 +208,7 @@ async function checkLiveStreams() {
       liveApiOk = false;
       console.warn('[FNSL] Live API not ok:', data.error || data);
       if (statusText) {
-        statusText.textContent = 'Live auto-detect offline: ' + (data.error || 'check Vercel TWITCH env vars');
+        statusText.textContent = 'No one is live right now — auto-detect will turn on when Twitch is configured';
       }
     }
 
@@ -217,7 +217,7 @@ async function checkLiveStreams() {
     liveApiOk = false;
     console.warn('[FNSL] Live check failed:', err);
     const statusText2 = document.getElementById('live-status-text');
-    if (statusText2) statusText2.textContent = 'Live auto-detect failed — see browser console';
+    if (statusText2) statusText2.textContent = 'No one is live right now — check VODs or come back later';
     renderLiveStreams();
   }
 }
@@ -289,14 +289,13 @@ function renderLiveStreams() {
     container.appendChild(createStreamCard(stream));
   });
 
-  if (liveApiOk) {
-    statusText.textContent = liveOnes.length > 0
-      ? `${liveOnes.length} stream${liveOnes.length > 1 ? 's' : ''} live right now`
-      : 'No one is live — check VODs or come back later';
-  } else if (!statusText.textContent.includes('auto-detect')) {
-    statusText.textContent = liveOnes.length > 0
-      ? `${liveOnes.length} stream${liveOnes.length > 1 ? 's' : ''} live right now`
-      : 'No one is live — check VODs or come back later';
+  if (liveOnes.length > 0) {
+    statusText.textContent = `${liveOnes.length} stream${liveOnes.length > 1 ? 's' : ''} live right now`;
+  } else if (liveApiOk) {
+    statusText.textContent = 'No one is live — check VODs or come back later';
+  } else {
+    // Keep a friendly message; technical Twitch errors stay in the console
+    statusText.textContent = 'No one is live right now — streams will light up when someone goes live';
   }
 
   updateLiveBadge(liveOnes.length);

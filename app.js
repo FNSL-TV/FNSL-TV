@@ -7,6 +7,7 @@
 let currentSection = 'live';
 let filteredVods = [];
 let liveStatusCache = {};       // { username: { isLive, title, viewerCount, ... } }
+let liveApiOk = false;           // true only when /api/live returned ok:true
 let lastLiveCheck = 0;
 
 // ---------- INIT ----------
@@ -163,7 +164,6 @@ async function checkLiveStreams() {
     .map(c => c.trim().toLowerCase())
     .filter(Boolean);
 
-  // Also include any channels listed in featuredStreams
   (FNSL_CONFIG.featuredStreams || []).forEach(s => {
     if (s.channel && s.platform === 'twitch') {
       const name = s.channel.trim().toLowerCase();
@@ -184,17 +184,30 @@ async function checkLiveStreams() {
     const res = await fetch(url);
     const data = await res.json();
 
-    liveStatusCache = {};
     if (data.ok && Array.isArray(data.live)) {
+      liveStatusCache = {};
       data.live.forEach(s => {
-        liveStatusCache[s.login.toLowerCase()] = s;
+        const login = (s.login || '').toLowerCase();
+        if (login) liveStatusCache[login] = s;
       });
+      liveApiOk = true;
+      lastLiveCheck = Date.now();
+      console.log('[FNSL] Live check OK:', data.live.length, 'live of', data.checked, 'checked', data.live);
+    } else {
+      // Do NOT wipe cache / force offline on API errors
+      liveApiOk = false;
+      console.warn('[FNSL] Live API not ok:', data.error || data);
+      if (statusText) {
+        statusText.textContent = 'Live auto-detect offline: ' + (data.error || 'check Vercel TWITCH env vars');
+      }
     }
 
-    lastLiveCheck = Date.now();
     renderLiveStreams();
   } catch (err) {
-    console.warn('Live check failed (will use manual isLive flags):', err);
+    liveApiOk = false;
+    console.warn('[FNSL] Live check failed:', err);
+    const statusText2 = document.getElementById('live-status-text');
+    if (statusText2) statusText2.textContent = 'Live auto-detect failed — see browser console';
     renderLiveStreams();
   }
 }
@@ -210,10 +223,10 @@ function renderLiveStreams() {
   // Build the list of streams to show
   let streams = [...(FNSL_CONFIG.featuredStreams || [])];
 
-  // Apply automatic live status
+  // Apply automatic live status (only override when API succeeded)
   streams = streams.map(s => {
     const channel = (s.channel || '').trim().toLowerCase();
-    const liveInfo = liveStatusCache[channel];
+    const liveInfo = channel ? liveStatusCache[channel] : null;
 
     if (liveInfo) {
       return {
@@ -226,16 +239,9 @@ function renderLiveStreams() {
       };
     }
 
-    // If we successfully checked and they are NOT in the live list → force offline
-    // (only if we have a channel name and we did a real check)
-    if (channel && Object.keys(liveStatusCache).length > 0 || lastLiveCheck > 0) {
-      // Keep the original isLive if we never got a successful API response
-      // but if API worked, override to false when not live
-      if (lastLiveCheck > 0) {
-        return { ...s, isLive: false };
-      }
+    if (liveApiOk && channel) {
+      return { ...s, isLive: false };
     }
-
     return s;
   });
 

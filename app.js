@@ -12,6 +12,13 @@ let lastLiveCheck = 0;
 
 // ---------- INIT ----------
 document.addEventListener('DOMContentLoaded', () => {
+  if (typeof FNSL_CONFIG === 'undefined') {
+    console.error('[FNSL] data.js failed to load — FNSL_CONFIG missing');
+    const st = document.getElementById('live-status-text');
+    if (st) st.textContent = 'Config error: data.js did not load. Re-upload data.js from the zip.';
+    return;
+  }
+
   applyConfig();
   renderVods();
   renderHistory();
@@ -19,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
   showSection('live');
   setupKeyboardNav();
 
-  // First render (manual flags), then try auto-detect
+  // Always paint stream cards first (offline ok), then try live detect
   renderLiveStreams();
   checkLiveStreams();
 
@@ -181,7 +188,10 @@ async function checkLiveStreams() {
 
   try {
     const url = `/api/live?channels=${encodeURIComponent(channels.join(','))}`;
-    const res = await fetch(url);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
     const data = await res.json();
 
     if (data.ok && Array.isArray(data.live)) {

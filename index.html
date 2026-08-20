@@ -1,572 +1,739 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#0a0a0f" />
-  <meta name="description" content="FNSL TV - Father N Son League streaming, history, and VODs. The ultimate Madden franchise league experience." />
-  <title>FNSL TV • Father N Son League • No one is bigger than the shield</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            fnsl: {
-              bg: '#0a0a0f',
-              card: '#12121a',
-              accent: '#22c55e',
-              accent2: '#3b82f6',
-              gold: '#fbbf24',
-              muted: '#94a3b8'
-            }
-          },
-          fontFamily: {
-            display: ['Inter', 'system-ui', 'sans-serif'],
-          }
-        }
+// ============================================================
+// FNSL TV - Application Logic
+// Works on any modern browser
+// Now with automatic Twitch live detection
+// ============================================================
+
+let currentSection = 'live';
+let filteredVods = [];
+let liveStatusCache = {};       // { username: { isLive, title, viewerCount, ... } }
+let liveApiOk = false;           // true only when /api/live returned ok:true
+let lastLiveCheck = 0;
+
+// ---------- INIT ----------
+document.addEventListener('DOMContentLoaded', () => {
+  applyConfig();
+  renderVods();
+  renderHistory();
+  renderStandings();
+  showSection('live');
+  setupKeyboardNav();
+
+  // First render (manual flags), then try auto-detect
+  renderLiveStreams();
+  checkLiveStreams();
+
+  // Re-check every 60 seconds
+  setInterval(checkLiveStreams, 60 * 1000);
+});
+
+// ---------- CONFIG APPLY ----------
+function applyConfig() {
+  const cycleEl = document.getElementById('cycle-season');
+  if (cycleEl) cycleEl.textContent = FNSL_CONFIG.cycleSeason || 'M27 - S1';
+  const seasonEl = document.getElementById('current-season');
+  if (seasonEl) seasonEl.textContent = FNSL_CONFIG.currentSeason || 'Season ?';
+  const champEl = document.getElementById('defending-champ');
+  if (champEl) champEl.textContent = FNSL_CONFIG.defendingChamp || '—';
+  const coachEl = document.getElementById('defending-coach');
+  if (coachEl) coachEl.textContent = FNSL_CONFIG.defendingCoach || '';
+
+
+  // Champ team logo
+  const champLogo = document.getElementById('champ-logo');
+  if (champLogo && FNSL_CONFIG.defendingChamp) {
+    const name = FNSL_CONFIG.defendingChamp.toLowerCase();
+    const abbrMap = {
+      'jacksonville jaguars': 'jax', 'las vegas raiders': 'lv', 'atlanta falcons': 'atl',
+      'seattle seahawks': 'sea', 'new york giants': 'nyg', 'detroit lions': 'det',
+      'kansas city chiefs': 'kc', 'philadelphia eagles': 'phi', 'green bay packers': 'gb',
+      'dallas cowboys': 'dal', 'san francisco 49ers': 'sf', 'buffalo bills': 'buf',
+      'baltimore ravens': 'bal', 'cincinnati bengals': 'cin', 'miami dolphins': 'mia',
+      'new england patriots': 'ne', 'chicago bears': 'chi', 'minnesota vikings': 'min',
+      'carolina panthers': 'car', 'tampa bay buccaneers': 'tb', 'arizona cardinals': 'ari',
+      'los angeles rams': 'lar', 'los angeles chargers': 'lac', 'denver broncos': 'den',
+      'houston texans': 'hou', 'indianapolis colts': 'ind', 'tennessee titans': 'ten',
+      'pittsburgh steelers': 'pit', 'cleveland browns': 'cle', 'new york jets': 'nyj',
+      'washington commanders': 'wsh', 'washington football team': 'wsh', 'new orleans saints': 'no'
+    };
+    let abbr = null;
+    for (const [key, val] of Object.entries(abbrMap)) {
+      if (name.includes(key) || key.includes(name)) { abbr = val; break; }
+    }
+    // also try matching last word
+    if (!abbr) {
+      const last = name.split(' ').pop();
+      for (const [key, val] of Object.entries(abbrMap)) {
+        if (key.includes(last)) { abbr = val; break; }
       }
     }
-  </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; }
-    html, body {
-      height: 100%;
-      background: #0a0a0f;
-      color: #e2e8f0;
-      font-family: 'Inter', system-ui, sans-serif;
-      overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
+    if (abbr) {
+      champLogo.src = `https://a.espncdn.com/i/teamlogos/nfl/500/${abbr}.png`;
+      champLogo.style.display = 'block';
+      champLogo.alt = FNSL_CONFIG.defendingChamp;
     }
-    /* TV-friendly focus styles */
-    :focus-visible {
-      outline: 3px solid #22c55e;
-      outline-offset: 4px;
+  }
+
+  startStatsSlideshow();
+  renderSocialLinks();
+  renderTicker();
+}
+
+// ---------- LEAGUE LEADERS SLIDESHOW ----------
+let statsSlideIndex = 0;
+let statsSlideTimer = null;
+
+function startStatsSlideshow() {
+  const container = document.getElementById('stats-slideshow');
+  const dots = document.getElementById('stats-dots');
+  if (!container) return;
+
+  const players = FNSL_CONFIG.topPlayers || [];
+  if (players.length === 0) {
+    container.innerHTML = '<p class="text-slate-400 text-sm">Leaders update after Week 1</p>';
+    return;
+  }
+
+  container.innerHTML = players.map((p, i) => `
+    <div class="stat-slide ${i === 0 ? 'active' : ''}" data-idx="${i}">
+      <div class="flex items-baseline justify-between gap-2">
+        <span class="text-xs font-bold text-purple-300 uppercase">${escapeHtml(p.pos)}</span>
+        <span class="text-xs text-slate-500">#${p.rank || 1}</span>
+      </div>
+      <p class="font-bold text-lg leading-tight mt-1">${escapeHtml(p.name)}</p>
+      <p class="text-slate-400 text-sm">${escapeHtml(p.team)} · ${escapeHtml(p.stat)}</p>
+    </div>
+  `).join('');
+
+  if (dots) {
+    dots.innerHTML = players.map((_, i) =>
+      `<button class="w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-purple-400' : 'bg-slate-600'} stats-dot" data-idx="${i}" aria-label="Slide ${i+1}"></button>`
+    ).join('');
+    dots.querySelectorAll('.stats-dot').forEach(btn => {
+      btn.addEventListener('click', () => {
+        statsSlideIndex = parseInt(btn.dataset.idx, 10);
+        showStatsSlide(statsSlideIndex);
+        resetStatsTimer();
+      });
+    });
+  }
+
+  resetStatsTimer();
+}
+
+function showStatsSlide(idx) {
+  const slides = document.querySelectorAll('.stat-slide');
+  const dots = document.querySelectorAll('.stats-dot');
+  if (!slides.length) return;
+  statsSlideIndex = ((idx % slides.length) + slides.length) % slides.length;
+  slides.forEach((s, i) => s.classList.toggle('active', i === statsSlideIndex));
+  dots.forEach((d, i) => {
+    d.classList.toggle('bg-purple-400', i === statsSlideIndex);
+    d.classList.toggle('bg-slate-600', i !== statsSlideIndex);
+  });
+}
+
+function resetStatsTimer() {
+  if (statsSlideTimer) clearInterval(statsSlideTimer);
+  statsSlideTimer = setInterval(() => {
+    showStatsSlide(statsSlideIndex + 1);
+  }, 4000);
+}
+
+// ---------- NAVIGATION ----------
+function showSection(name) {
+  currentSection = name;
+  document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+  const el = document.getElementById('section-' + name);
+  if (el) el.classList.remove('hidden');
+
+  document.querySelectorAll('.nav-btn[data-section]').forEach(btn => {
+    if (btn.dataset.section === name) {
+      btn.classList.add('bg-green-600/20', 'text-green-400');
+    } else {
+      btn.classList.remove('bg-green-600/20', 'text-green-400');
     }
-    .tv-card:focus-visible, .nav-btn:focus-visible, .stream-card:focus-visible {
-      transform: scale(1.03);
-      box-shadow: 0 0 0 3px #22c55e, 0 20px 40px rgba(34, 197, 94, 0.15);
+  });
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ---------- AUTOMATIC LIVE CHECK ----------
+async function checkLiveStreams() {
+  const channels = (FNSL_CONFIG.twitchChannels || [])
+    .map(c => c.trim().toLowerCase())
+    .filter(Boolean);
+
+  (FNSL_CONFIG.featuredStreams || []).forEach(s => {
+    if (s.channel && s.platform === 'twitch') {
+      const name = s.channel.trim().toLowerCase();
+      if (name && !channels.includes(name)) channels.push(name);
     }
-    .stream-card, .tv-card, .nav-btn, button, a {
-      transition: all 0.2s ease;
-    }
-    /* Smooth scrolling for remote */
-    html { scroll-behavior: smooth; }
-    /* Hide scrollbar but keep functionality */
-    ::-webkit-scrollbar { width: 8px; height: 8px; }
-    ::-webkit-scrollbar-track { background: #0a0a0f; }
-    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #22c55e; }
-    /* Live pulse */
-    .live-dot {
-      animation: pulse 1.5s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-    /* Fullscreen player overlay */
-    #player-overlay {
-      display: none;
-    }
-    #player-overlay.active {
-      display: flex;
-    }
-    /* Grid for streams optimized for TV */
-    .streams-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 1.5rem;
-    }
-    @media (min-width: 1920px) {
-      .streams-grid {
-        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  });
+
+  if (channels.length === 0) {
+    renderLiveStreams();
+    return;
+  }
+
+  const statusText = document.getElementById('live-status-text');
+  if (statusText) statusText.textContent = 'Checking who is live…';
+
+  try {
+    const url = `/api/live?channels=${encodeURIComponent(channels.join(','))}`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (data.ok && Array.isArray(data.live)) {
+      liveStatusCache = {};
+      data.live.forEach(s => {
+        const login = (s.login || '').toLowerCase();
+        if (login) liveStatusCache[login] = s;
+      });
+      liveApiOk = true;
+      lastLiveCheck = Date.now();
+      console.log('[FNSL] Live check OK:', data.live.length, 'live of', data.checked, 'checked', data.live);
+    } else {
+      // Do NOT wipe cache / force offline on API errors
+      liveApiOk = false;
+      console.warn('[FNSL] Live API not ok:', data.error || data);
+      if (statusText) {
+        statusText.textContent = 'Live auto-detect offline: ' + (data.error || 'check Vercel TWITCH env vars');
       }
     }
-    @media (min-width: 1280px) {
-      #section-live .streams-grid {
-        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+
+    renderLiveStreams();
+  } catch (err) {
+    liveApiOk = false;
+    console.warn('[FNSL] Live check failed:', err);
+    const statusText2 = document.getElementById('live-status-text');
+    if (statusText2) statusText2.textContent = 'Live auto-detect failed — see browser console';
+    renderLiveStreams();
+  }
+}
+
+// ---------- LIVE STREAMS ----------
+function renderLiveStreams() {
+  const container = document.getElementById('live-streams');
+  const noLive = document.getElementById('no-live');
+  const statusText = document.getElementById('live-status-text');
+
+  container.innerHTML = '';
+
+  // Build the list of streams to show
+  let streams = [...(FNSL_CONFIG.featuredStreams || [])];
+
+  // Apply automatic live status (only override when API succeeded)
+  streams = streams.map(s => {
+    const channel = (s.channel || '').trim().toLowerCase();
+    const liveInfo = channel ? liveStatusCache[channel] : null;
+
+    if (liveInfo) {
+      return {
+        ...s,
+        isLive: true,
+        title: liveInfo.title || s.title,
+        viewerCount: liveInfo.viewerCount,
+        thumbnail: liveInfo.thumbnail || s.thumbnail,
+        startedAt: liveInfo.startedAt
+      };
+    }
+
+    if (liveApiOk && channel) {
+      return { ...s, isLive: false };
+    }
+    return s;
+  });
+
+  // Also add any live channels that were in twitchChannels but not in featuredStreams
+  Object.values(liveStatusCache).forEach(liveInfo => {
+    const already = streams.some(s => (s.channel || '').toLowerCase() === liveInfo.login.toLowerCase());
+    if (!already) {
+      streams.push({
+        id: liveInfo.login,
+        title: liveInfo.title || `${liveInfo.displayName} is live`,
+        owner: liveInfo.displayName,
+        platform: 'twitch',
+        channel: liveInfo.login,
+        isLive: true,
+        viewerCount: liveInfo.viewerCount,
+        thumbnail: liveInfo.thumbnail
+      });
+    }
+  });
+
+  const liveOnes = streams.filter(s => s.isLive);
+  const offlineOnes = streams.filter(s => !s.isLive);
+
+  if (liveOnes.length === 0 && offlineOnes.length === 0) {
+    noLive.classList.remove('hidden');
+    statusText.textContent = 'No streams configured yet — add usernames in data.js';
+    updateLiveBadge(0);
+    return;
+  }
+
+  noLive.classList.add('hidden');
+
+  // Show live first
+  [...liveOnes, ...offlineOnes].forEach(stream => {
+    container.appendChild(createStreamCard(stream));
+  });
+
+  if (liveApiOk) {
+    statusText.textContent = liveOnes.length > 0
+      ? `${liveOnes.length} stream${liveOnes.length > 1 ? 's' : ''} live right now`
+      : 'No one is live — check VODs or come back later';
+  } else if (!statusText.textContent.includes('auto-detect')) {
+    statusText.textContent = liveOnes.length > 0
+      ? `${liveOnes.length} stream${liveOnes.length > 1 ? 's' : ''} live right now`
+      : 'No one is live — check VODs or come back later';
+  }
+
+  updateLiveBadge(liveOnes.length);
+}
+
+// NFL team logo lookup (ESPN CDN)
+const TEAM_LOGO_ABBR = {
+  raiders: 'lv', packers: 'gb', bears: 'chi', giants: 'nyg', eagles: 'phi',
+  patriots: 'ne', colts: 'ind', rams: 'lar', chiefs: 'kc', cardinals: 'ari',
+  commanders: 'wsh', texans: 'hou', titans: 'ten', steelers: 'pit', dolphins: 'mia',
+  lions: 'det', panthers: 'car', vikings: 'min', cowboys: 'dal', chargers: 'lac',
+  broncos: 'den', '49ers': 'sf', bengals: 'cin', jets: 'nyj', seahawks: 'sea',
+  buccaneers: 'tb', falcons: 'atl', ravens: 'bal', browns: 'cle', jaguars: 'jax',
+  bills: 'buf', saints: 'no'
+};
+
+function getTeamLogoUrl(stream) {
+  const id = (stream.id || '').toLowerCase();
+  const abbr = TEAM_LOGO_ABBR[id];
+  if (abbr) return `https://a.espncdn.com/i/teamlogos/nfl/500/${abbr}.png`;
+  const title = (stream.title || '').toLowerCase();
+  for (const [key, val] of Object.entries(TEAM_LOGO_ABBR)) {
+    if (title.includes(key)) {
+      return `https://a.espncdn.com/i/teamlogos/nfl/500/${val}.png`;
+    }
+  }
+  return null;
+}
+
+function createStreamCard(stream) {
+  const card = document.createElement('div');
+  card.className = 'stream-card tv-card rounded-2xl bg-fnsl-card border border-slate-800 overflow-hidden cursor-pointer group focus:outline-none';
+  card.tabIndex = 0;
+  card.setAttribute('role', 'button');
+
+  const isLive = stream.isLive;
+  const viewers = stream.viewerCount ? `${stream.viewerCount} watching` : '';
+  const logoUrl = getTeamLogoUrl(stream);
+  // Live preview from Twitch (updates while streaming)
+  const previewUrl = (isLive && stream.channel)
+    ? `https://static-cdn.jtvnw.net/previews-ttv/live_user_${encodeURIComponent(stream.channel.toLowerCase())}-640x360.jpg?t=${Date.now()}`
+    : null;
+
+  card.innerHTML = `
+    <div class="relative aspect-video bg-slate-900 overflow-hidden">
+      ${isLive ? `
+        <div class="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-600 text-xs font-bold uppercase tracking-wide shadow">
+          <span class="w-1.5 h-1.5 rounded-full bg-white live-dot"></span> LIVE
+        </div>
+      ` : `
+        <div class="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-md bg-slate-700/90 text-xs font-medium">
+          Offline
+        </div>
+      `}
+      <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900">
+        ${previewUrl
+          ? `<img src="${previewUrl}" alt="Live preview" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerHTML='${logoUrl ? `<img src=\'${logoUrl}\' class=\'w-20 h-20 object-contain\' />` : '🔴'}';" />`
+          : (logoUrl
+            ? `<img src="${logoUrl}" alt="" class="w-20 h-20 object-contain opacity-90 group-hover:scale-110 transition duration-300" onerror="this.style.display='none'" />`
+            : `<span class="text-4xl">📺</span>`)}
+      </div>
+      <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition flex items-center justify-center">
+        <div class="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center shadow-xl">
+          <svg class="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/></svg>
+        </div>
+      </div>
+    </div>
+    <div class="p-4">
+      <h3 class="font-bold text-lg leading-tight line-clamp-2">${escapeHtml(stream.title || 'Untitled Stream')}</h3>
+      <p class="text-slate-400 text-sm mt-1">${escapeHtml(stream.owner || stream.channel || '')}</p>
+      <div class="flex items-center justify-between mt-3 text-xs text-slate-500">
+        <div class="flex items-center gap-2">
+          ${logoUrl ? `<img src="${logoUrl}" alt="" class="w-6 h-6 object-contain" onerror="this.style.display='none'" />` : ''}
+          <span class="uppercase tracking-wide">${stream.platform || 'stream'}</span>
+        </div>
+        <span>${viewers}</span>
+      </div>
+    </div>
+  `;
+
+  card.addEventListener('click', () => openStream(stream));
+  card.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openStream(stream);
+    }
+  });
+
+  return card;
+}
+
+function openStream(stream) {
+  const overlay = document.getElementById('player-overlay');
+  const container = document.getElementById('player-container');
+  const title = document.getElementById('player-title');
+
+  title.textContent = stream.title || 'Stream';
+
+  let embed = '';
+  if (stream.platform === 'twitch' && stream.channel) {
+    const parent = window.location.hostname || 'localhost';
+    embed = `<iframe
+      src="https://player.twitch.tv/?channel=${encodeURIComponent(stream.channel)}&parent=${parent}&autoplay=true"
+      height="100%" width="100%"
+      allowfullscreen
+      class="w-full h-full min-h-[60vh]"
+      style="border:none;">
+    </iframe>`;
+  } else if (stream.platform === 'youtube' && stream.videoId) {
+    embed = `<iframe
+      src="https://www.youtube.com/embed/${encodeURIComponent(stream.videoId)}?autoplay=1"
+      height="100%" width="100%"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen
+      class="w-full h-full min-h-[60vh]"
+      style="border:none;">
+    </iframe>`;
+  } else if (stream.url) {
+    window.open(stream.url, '_blank');
+    return;
+  } else {
+    embed = `<div class="text-center p-12 text-slate-400">
+      <p class="text-xl mb-2">No embed available</p>
+      <p>Add a Twitch channel or YouTube video ID in data.js</p>
+    </div>`;
+  }
+
+  container.innerHTML = embed;
+  overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePlayer() {
+  const overlay = document.getElementById('player-overlay');
+  const container = document.getElementById('player-container');
+  overlay.classList.remove('active');
+  container.innerHTML = '';
+  document.body.style.overflow = '';
+}
+
+function playAllLive() {
+  const live = (FNSL_CONFIG.featuredStreams || []).filter(s => {
+    const channel = (s.channel || '').toLowerCase();
+    return s.isLive || liveStatusCache[channel];
+  });
+
+  // Also include pure auto-detected ones
+  const autoLive = Object.values(liveStatusCache).map(l => ({
+    channel: l.login,
+    title: l.title,
+    platform: 'twitch',
+    isLive: true
+  }));
+
+  const allLive = [...live, ...autoLive];
+  if (allLive.length === 0) {
+    alert('No live streams right now.');
+    return;
+  }
+  openStream(allLive[0]);
+}
+
+function refreshStreams() {
+  checkLiveStreams();
+}
+
+function updateLiveBadge(count) {
+  const badge = document.getElementById('live-badge');
+  const countEl = document.getElementById('live-count');
+  if (count > 0) {
+    badge.classList.remove('hidden');
+    badge.classList.add('flex');
+    countEl.textContent = `${count} LIVE`;
+  } else {
+    badge.classList.add('hidden');
+    badge.classList.remove('flex');
+  }
+}
+
+// ---------- VODS ----------
+function renderVods() {
+  // Chronological (oldest first)
+  filteredVods = [...(FNSL_CONFIG.vods || [])].sort((a, b) =>
+    String(a.date || '').localeCompare(String(b.date || ''))
+  );
+  filterVods();
+}
+
+function filterVods() {
+  const search = (document.getElementById('vod-search')?.value || '').toLowerCase();
+  const type = document.getElementById('vod-filter')?.value || 'all';
+
+  filteredVods = (FNSL_CONFIG.vods || []).filter(v => {
+    const matchesType = type === 'all' || v.type === type;
+    const matchesSearch = !search ||
+      (v.title || '').toLowerCase().includes(search) ||
+      (v.description || '').toLowerCase().includes(search) ||
+      (v.teams || []).join(' ').toLowerCase().includes(search) ||
+      (v.season || '').toString().includes(search);
+    return matchesType && matchesSearch;
+  }).sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
+
+  const grid = document.getElementById('vod-grid');
+  grid.innerHTML = '';
+
+  if (filteredVods.length === 0) {
+    grid.innerHTML = `
+      <div class="col-span-full text-center py-16 text-slate-400">
+        <p class="text-xl mb-2">No VODs match your filters</p>
+        <p class="text-sm">Add past streams in data.js → vods array</p>
+      </div>`;
+    return;
+  }
+
+  filteredVods.forEach(vod => {
+    const card = document.createElement('div');
+    card.className = 'stream-card tv-card rounded-2xl bg-fnsl-card border border-slate-800 overflow-hidden cursor-pointer group';
+    card.tabIndex = 0;
+
+    const typeBadge = {
+      game: 'bg-blue-600/30 text-blue-300',
+      draft: 'bg-purple-600/30 text-purple-300',
+      show: 'bg-amber-600/30 text-amber-300',
+      superbowl: 'bg-yellow-500/20 text-yellow-300'
+    }[vod.type] || 'bg-slate-700 text-slate-300';
+
+    card.innerHTML = `
+      <div class="relative aspect-video bg-slate-900 flex items-center justify-center text-4xl">
+        📼
+        <div class="absolute top-3 left-3 px-2 py-0.5 rounded text-xs font-bold uppercase ${typeBadge}">
+          ${vod.type || 'vod'}
+        </div>
+      </div>
+      <div class="p-4">
+        <h3 class="font-bold text-lg leading-tight">${escapeHtml(vod.title)}</h3>
+        <p class="text-slate-400 text-sm mt-1 line-clamp-2">${escapeHtml(vod.description || '')}</p>
+        <div class="flex items-center justify-between mt-3 text-xs text-slate-500">
+          <span>Season ${vod.season || '?'}</span>
+          <span>${vod.date || ''}</span>
+        </div>
+      </div>
+    `;
+
+    card.addEventListener('click', () => openVod(vod));
+    card.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openVod(vod);
       }
-    }
-    /* ===== FIELD + FNSL LOGO BACKDROP ===== */
-    #site-backdrop {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      overflow: hidden;
-      background:
-        /* dark top-to-bottom so content stays readable */
-        linear-gradient(180deg, #0a0a0f 0%, rgba(10,14,12,0.92) 35%, rgba(8,18,12,0.88) 65%, #0a0a0f 100%),
-        /* soft green field glow in center */
-        radial-gradient(ellipse 90% 55% at 50% 55%, rgba(22, 101, 52, 0.35) 0%, transparent 70%);
-    }
-    /* Yard lines */
-    #site-backdrop .field-lines {
-      position: absolute;
-      inset: 0;
-      background:
-        repeating-linear-gradient(
-          0deg,
-          transparent 0,
-          transparent 56px,
-          rgba(34, 197, 94, 0.07) 56px,
-          rgba(34, 197, 94, 0.07) 58px
-        ),
-        repeating-linear-gradient(
-          90deg,
-          transparent 0,
-          transparent 120px,
-          rgba(34, 197, 94, 0.04) 120px,
-          rgba(34, 197, 94, 0.04) 121px
-        );
-      mask-image: radial-gradient(ellipse 85% 70% at 50% 50%, black 20%, transparent 75%);
-      opacity: 0.9;
-    }
-    /* Giant logo "painted" on the field */
-    #site-backdrop .field-logo {
-      position: absolute;
-      left: 50%;
-      top: 42%;
-      transform: translate(-50%, -50%);
-      width: min(78vw, 820px);
-      height: auto;
-      opacity: 0.14;
-      filter: grayscale(0.15) brightness(0.85) contrast(1.1);
-      object-fit: contain;
-      user-select: none;
-    }
-    /* Vignette so edges stay dark */
-    #site-backdrop .vignette {
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse 70% 60% at 50% 45%, transparent 0%, rgba(10,10,15,0.55) 100%);
-    }
-    header, main, footer, #player-overlay {
-      position: relative;
-      z-index: 1;
-    }
-    /* Stats slideshow */
-    .stat-slide { display: none; }
-    .stat-slide.active { display: block; animation: fadeIn 0.5s ease; }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .champ-signature {
-      font-family: 'Great Vibes', cursive;
-      font-size: 1.65rem;
-      line-height: 1.1;
-      color: #86efac;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-      margin-top: 0.35rem;
-      transform: rotate(-2deg);
-      display: inline-block;
-    }
-    .social-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.4rem;
-      padding: 0.45rem;
-      border-radius: 0.75rem;
-      background: rgba(18, 18, 26, 0.85);
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      color: #e2e8f0;
-      font-size: 0.8rem;
-      font-weight: 600;
-      transition: all 0.2s ease;
-      text-decoration: none;
-    }
-    .social-btn span { display: none; }
-    @media (min-width: 1024px) {
-      .social-btn { padding: 0.45rem 0.75rem; }
-      .social-btn span { display: inline; }
-    }
-    .social-btn:hover, .social-btn:focus-visible {
-      transform: translateY(-1px);
-      border-color: currentColor;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.35);
-    }
-    .social-btn svg { width: 1.15rem; height: 1.15rem; flex-shrink: 0; }
-    #social-links-footer .social-btn span { display: inline; }
-    #social-links-footer .social-btn { padding: 0.55rem 1rem; border-radius: 9999px; }
-    /* ===== FNSL SCORE TICKER ===== */
-    #fnsl-ticker {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 40;
-      height: 40px;
-      background: linear-gradient(90deg, #0a0a0f 0%, #12121a 15%, #12121a 85%, #0a0a0f 100%);
-      border-top: 1px solid rgba(34, 197, 94, 0.35);
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-    }
-    @media (max-width: 767px) {
-      #fnsl-ticker { bottom: 58px; } /* sit above mobile nav */
-      main { padding-bottom: 7rem !important; }
-    }
-    @media (min-width: 768px) {
-      main { padding-bottom: 4rem !important; }
-      footer { padding-bottom: 3rem; }
-    }
-    #fnsl-ticker .ticker-label {
-      flex-shrink: 0;
-      background: #22c55e;
-      color: #0a0a0f;
-      font-weight: 800;
-      font-size: 0.7rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 0 0.85rem;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      z-index: 2;
-    }
-    #fnsl-ticker .ticker-track {
-      flex: 1;
-      overflow: hidden;
-      white-space: nowrap;
-      position: relative;
-    }
-    #fnsl-ticker .ticker-content {
-      display: inline-block;
-      padding-left: 100%;
-      animation: ticker-scroll 75s linear infinite;
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: #e2e8f0;
-    }
-    #fnsl-ticker .ticker-content:hover {
-      animation-play-state: paused;
-    }
-    #fnsl-ticker .ticker-item {
-      display: inline-block;
-      padding: 0 1.75rem;
-    }
-    #fnsl-ticker .ticker-item .sep {
-      color: #22c55e;
-      margin: 0 0.35rem;
-      opacity: 0.7;
-    }
-    #fnsl-ticker .ticker-item.live-item {
-      color: #f87171;
-    }
-    #fnsl-ticker .ticker-item.final-item {
-      color: #94a3b8;
-    }
-    @keyframes ticker-scroll {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-100%); }
-    }
-  </style>
-</head>
-<body class="bg-fnsl-bg text-slate-100 min-h-screen">
+    });
 
-  <!-- Field + FNSL logo backdrop -->
-  <div id="site-backdrop" aria-hidden="true">
-    <div class="field-lines"></div>
-    <img class="field-logo" src="logo.jpg" alt="" />
-    <div class="vignette"></div>
-  </div>
+    grid.appendChild(card);
+  });
+}
+
+function openVod(vod) {
+  if (vod.platform === 'youtube' && vod.videoId) {
+    openStream({
+      title: vod.title,
+      platform: 'youtube',
+      videoId: vod.videoId
+    });
+  } else if (vod.url) {
+    window.open(vod.url, '_blank');
+  } else {
+    alert('Add a YouTube videoId or url for this VOD in data.js');
+  }
+}
+
+// ---------- HISTORY ----------
+function renderHistory() {
+  const tbody = document.getElementById('history-tbody');
+  tbody.innerHTML = '';
+
+  const history = [...(FNSL_CONFIG.history || [])].sort((a, b) => b.season - a.season);
+
+  if (history.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="px-5 py-12 text-center text-slate-400">
+          No championship history yet.<br>
+          <span class="text-sm">Add entries to FNSL_CONFIG.history in data.js</span>
+        </td>
+      </tr>`;
+  } else {
+    history.forEach(h => {
+      const tr = document.createElement('tr');
+      tr.className = 'hover:bg-slate-800/50 transition';
+      tr.innerHTML = `
+        <td class="px-5 py-4 font-medium">${h.season}</td>
+        <td class="px-5 py-4 text-amber-400 font-bold">SB ${h.superBowl || h.season}</td>
+        <td class="px-5 py-4 font-bold text-green-400">${escapeHtml(h.champion)}</td>
+        <td class="px-5 py-4 text-slate-300">${escapeHtml(h.runnerUp || '—')}</td>
+        <td class="px-5 py-4 font-mono">${escapeHtml(h.score || '—')}</td>
+        <td class="px-5 py-4 text-sm text-slate-400">${escapeHtml(h.mvp || h.notes || '')}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  const leaderboard = document.getElementById('titles-leaderboard');
+  leaderboard.innerHTML = '';
+  const titles = getTitleCounts();
+
+  if (titles.length === 0) {
+    leaderboard.innerHTML = `<p class="col-span-full text-slate-400">Add champions to see the all-time leaderboard.</p>`;
+  } else {
+    titles.forEach(({ team, titles: count }, i) => {
+      const card = document.createElement('div');
+      card.className = 'tv-card rounded-xl bg-fnsl-card border border-slate-800 p-4 text-center';
+      card.innerHTML = `
+        <div class="text-3xl font-black ${i === 0 ? 'text-amber-400' : 'text-slate-200'}">${count}</div>
+        <div class="text-sm font-medium mt-1 leading-tight">${escapeHtml(team)}</div>
+        <div class="text-xs text-slate-500 mt-1">${count === 1 ? 'title' : 'titles'}</div>
+      `;
+      leaderboard.appendChild(card);
+    });
+  }
+}
 
 
-  <!-- Top Nav -->
-  <header class="sticky top-0 z-50 bg-fnsl-bg/95 backdrop-blur-md border-b border-slate-800">
-    <div class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16 md:h-20 py-2">
-        <div class="flex items-center gap-3">
-          <img src="logo.jpg" alt="FNSL Logo" class="h-12 md:h-14 w-auto object-contain drop-shadow-lg" />
-          <div>
-            <h1 class="text-xl md:text-2xl font-black tracking-tight">FNSL <span class="text-green-400">TV</span></h1>
-            <p class="text-xs text-slate-400 hidden sm:block">Father N Son League • “No one is bigger than the shield”</p>
-          </div>
-        </div>
+// ---------- STANDINGS ----------
+function renderStandings() {
+  renderConf('afc', FNSL_CONFIG.standings?.afc || []);
+  renderConf('nfc', FNSL_CONFIG.standings?.nfc || []);
+}
 
-        <nav class="hidden md:flex items-center gap-1">
-          <button onclick="showSection('live')" class="nav-btn px-4 py-2 rounded-lg font-semibold text-sm hover:bg-slate-800 focus:bg-slate-800" data-section="live">Live</button>
-          <button onclick="showSection('vods')" class="nav-btn px-4 py-2 rounded-lg font-semibold text-sm hover:bg-slate-800 focus:bg-slate-800" data-section="vods">VODs</button>
-          <button onclick="showSection('history')" class="nav-btn px-4 py-2 rounded-lg font-semibold text-sm hover:bg-slate-800 focus:bg-slate-800" data-section="history">History</button>
-          <button onclick="showSection('standings')" class="nav-btn px-4 py-2 rounded-lg font-semibold text-sm hover:bg-slate-800 focus:bg-slate-800" data-section="standings">Standings</button>
-        </nav>
+function renderConf(conf, teams) {
+  const container = document.getElementById('standings-' + conf);
+  container.innerHTML = '';
 
-        <div class="flex items-center gap-2 sm:gap-3">
-          <div id="live-badge" class="hidden items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/20 border border-red-500/40">
-            <span class="w-2 h-2 rounded-full bg-red-500 live-dot"></span>
-            <span class="text-sm font-bold text-red-400" id="live-count">0 LIVE</span>
-          </div>
-          <div id="social-links" class="flex items-center gap-1.5"></div>
-          <button onclick="toggleFullscreen()" class="nav-btn p-2 rounded-lg hover:bg-slate-800" title="Fullscreen" aria-label="Toggle fullscreen">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
-          </button>
+  if (teams.length === 0) {
+    container.innerHTML = `<div class="px-5 py-8 text-center text-slate-400 text-sm">Add teams in data.js</div>`;
+    return;
+  }
+
+  const sorted = [...teams].sort((a, b) => {
+    const [aw] = (a.record || '0-0').split('-').map(Number);
+    const [bw] = (b.record || '0-0').split('-').map(Number);
+    return bw - aw;
+  });
+
+  sorted.forEach((t, i) => {
+    const row = document.createElement('div');
+    row.className = 'flex items-center justify-between px-5 py-3 hover:bg-slate-800/40';
+    row.innerHTML = `
+      <div class="flex items-center gap-3">
+        <span class="text-slate-500 text-sm w-5">${i + 1}</span>
+        <div>
+          <div class="font-semibold">${escapeHtml(t.team)}</div>
+          ${t.owner ? `<div class="text-xs text-slate-500">${escapeHtml(t.owner)}</div>` : ''}
         </div>
       </div>
-    </div>
-  </header>
+      <div class="font-mono font-bold text-lg">${escapeHtml(t.record || '0-0')}</div>
+    `;
+    container.appendChild(row);
+  });
+}
 
-  <!-- Score / Matchup Ticker -->
-  <div id="fnsl-ticker" aria-label="League ticker">
-    <div class="ticker-label">FNSL</div>
-    <div class="ticker-track">
-      <div class="ticker-content" id="ticker-content">
-        <!-- filled by JS -->
-      </div>
-    </div>
-  </div>
+// ---------- TV / KEYBOARD NAV ----------
+function setupKeyboardNav() {
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closePlayer();
+    if (e.key === '1') showSection('live');
+    if (e.key === '2') showSection('vods');
+    if (e.key === '3') showSection('history');
+    if (e.key === '4') showSection('standings');
+  });
+}
 
-  <!-- Mobile Nav -->
-  <div class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-fnsl-card border-t border-slate-800 flex justify-around py-2">
-    <button onclick="showSection('live')" class="nav-btn flex flex-col items-center gap-1 px-3 py-2 text-xs font-medium" data-section="live">
-      <span class="text-lg">📡</span> Live
-    </button>
-    <button onclick="showSection('vods')" class="nav-btn flex flex-col items-center gap-1 px-3 py-2 text-xs font-medium" data-section="vods">
-      <span class="text-lg">📼</span> VODs
-    </button>
-    <button onclick="showSection('history')" class="nav-btn flex flex-col items-center gap-1 px-3 py-2 text-xs font-medium" data-section="history">
-      <span class="text-lg">🏆</span> History
-    </button>
-    <button onclick="showSection('standings')" class="nav-btn flex flex-col items-center gap-1 px-3 py-2 text-xs font-medium" data-section="standings">
-      <span class="text-lg">📊</span> Standings
-    </button>
-  </div>
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  } else {
+    document.exitFullscreen();
+  }
+}
 
-  <main class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 pb-24 md:pb-12 pt-6">
+// ---------- UTILS ----------
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
-    <!-- HERO / LIVE SECTION -->
-    <section id="section-live" class="section">
-      <div class="mb-8">
-        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
-          <div>
-            <h2 class="text-3xl md:text-4xl font-black tracking-tight mb-2">Live Streams</h2>
-            <p class="text-slate-400 text-lg">Welcome to FNSL.TV. For the realest FNSL experience, watch the games as they happen.</p>
-          </div>
-          <div class="flex gap-3">
-            <button onclick="playAllLive()" class="nav-btn px-5 py-3 rounded-xl bg-green-600 hover:bg-green-500 font-bold text-white shadow-lg shadow-green-600/30 flex items-center gap-2">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/></svg>
-              Play All Live
-            </button>
-          </div>
-        </div>
+// Expose for inline handlers
+window.showSection = showSection;
+window.playAllLive = playAllLive;
+window.refreshStreams = refreshStreams;
+window.filterVods = filterVods;
+window.closePlayer = closePlayer;
+window.toggleFullscreen = toggleFullscreen;
+window.openStream = openStream;
+window.checkLiveStreams = checkLiveStreams;
 
-        <!-- Live status bar -->
-        <div id="live-status" class="rounded-2xl bg-fnsl-card border border-slate-800 p-5 mb-8 flex flex-wrap items-center justify-between gap-4">
-          <div class="flex items-center gap-4">
-            <div class="w-14 h-14 rounded-2xl bg-slate-800 flex items-center justify-center text-2xl">📺</div>
-            <div>
-              <p class="font-bold text-lg" id="live-status-text">Checking for live streams...</p>
-              <p class="text-slate-400 text-sm">FNSL channels are monitored automatically when configured.</p>
-            </div>
-          </div>
-          <button onclick="refreshStreams()" class="nav-btn px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 font-medium text-sm">
-            Refresh
-          </button>
-        </div>
+// ---------- SOCIAL LINKS ----------
+const SOCIAL_ICONS = {
+  discord: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>`,
+  youtube: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>`,
+  x: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,
+  twitch: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>`,
+  neonsportz: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L3 7v10l9 5 9-5V7l-9-5zm0 2.2l6.5 3.6v7.4L12 18.8 5.5 15.2V7.8L12 4.2zM8 10h2v6H8v-6zm3 2h2v4h-2v-4zm3-1h2v5h-2v-5z"/></svg>`
+};
 
-        <!-- Streams + X feed columns -->
-        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-          <!-- Left: live streams -->
-          <div class="xl:col-span-8 min-w-0">
-            <div id="live-streams" class="streams-grid">
-              <!-- Populated by JS -->
-            </div>
-            <div id="no-live" class="hidden text-center py-16 rounded-2xl border border-dashed border-slate-700 bg-fnsl-card/50">
-              <div class="text-5xl mb-4">😴</div>
-              <h3 class="text-xl font-bold mb-2">No streams currently live</h3>
-              <p class="text-slate-400 max-w-md mx-auto">When league members go live on Twitch, they'll appear here. You can also add channels in the config.</p>
-            </div>
-          </div>
+function renderSocialLinks() {
+  const links = (FNSL_CONFIG.socialLinks || []).filter(l => l.url && l.url.trim() !== '');
+  const html = links.map(l => {
+    const icon = SOCIAL_ICONS[l.id] || '';
+    const color = l.color || '#94a3b8';
+    return `<a class="social-btn" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer" style="color:${color}" title="${escapeHtml(l.label)}">
+      ${icon}<span>${escapeHtml(l.label)}</span>
+    </a>`;
+  }).join('');
 
-          <!-- Right: League X Feed -->
-          <aside class="xl:col-span-4" id="x-feed-section">
-            <div class="xl:sticky xl:top-24">
-              <div class="flex items-center justify-between gap-2 mb-3">
-                <div>
-                  <h3 class="text-lg font-bold">League X Feed</h3>
-                  <p class="text-slate-400 text-xs mt-0.5">Tag <span class="text-slate-200">@FNSLMadden</span> · <span class="text-slate-200">#FNSL</span></p>
-                </div>
-                <a href="https://x.com/FNSLMadden" target="_blank" rel="noopener" class="social-btn" style="color:#e7e9ea" title="Open @FNSLMadden">
-                  <svg viewBox="0 0 24 24" fill="currentColor" style="width:1.1rem;height:1.1rem"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                </a>
-              </div>
-              <div class="rounded-2xl border border-slate-800 bg-fnsl-card overflow-hidden p-2">
-                <a class="twitter-timeline"
-                   data-theme="dark"
-                   data-chrome="noheader nofooter noborders transparent"
-                   data-height="640"
-                   href="https://twitter.com/FNSLMadden?ref_src=twsrc%5Etfw">
-                  Posts by @FNSLMadden
-                </a>
-              </div>
-            </div>
-          </aside>
-        </div>
-      </div>
+  const top = document.getElementById('social-links');
+  const foot = document.getElementById('social-links-footer');
+  if (top) top.innerHTML = html;
+  if (foot) foot.innerHTML = html;
+}
 
-      <!-- Featured / Around the League -->
-      <div class="mt-12">
-        <h3 class="text-2xl font-bold mb-4">Around the FNSL</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <!-- 1. Season / Cycle -->
-          <div class="tv-card rounded-2xl bg-fnsl-card border border-slate-800 p-5 flex flex-col justify-between min-h-[140px]">
-            <div>
-              <p class="text-xs font-bold text-blue-400 uppercase tracking-wider mb-2">Cycle</p>
-              <p class="font-black text-2xl tracking-tight" id="cycle-season">M27 - S1</p>
-              <p class="text-slate-300 font-semibold mt-1" id="current-season">Season 58</p>
-            </div>
-            <div class="mt-3 flex justify-end">
-              <img src="logo.jpg" alt="FNSL" class="h-10 w-auto object-contain opacity-90" />
-            </div>
-          </div>
-          <!-- 2. Top Stats Slideshow -->
-          <div class="tv-card rounded-2xl bg-fnsl-card border border-slate-800 p-5 min-h-[140px]">
-            <p class="text-xs font-bold text-purple-400 uppercase tracking-wider mb-3">League Leaders</p>
-            <div id="stats-slideshow" class="relative min-h-[72px]">
-              <!-- slides filled by JS -->
-            </div>
-            <div id="stats-dots" class="flex gap-1.5 mt-3 justify-center"></div>
-          </div>
-          <!-- 3. Defending Champ -->
-          <div class="tv-card rounded-2xl bg-fnsl-card border border-green-500/20 p-5 min-h-[140px] relative overflow-hidden">
-            <div class="absolute -right-2 -bottom-4 opacity-20 pointer-events-none">
-              <img src="lombardi.jpg" alt="" class="h-28 w-auto object-contain" />
-            </div>
-            <p class="text-xs font-bold text-green-400 uppercase tracking-wider mb-3 relative z-10">Defending Champ</p>
-            <div class="flex items-center gap-3 relative z-10">
-              <img id="champ-logo" src="" alt="" class="w-14 h-14 object-contain drop-shadow-lg" style="display:none" />
-              <div class="min-w-0">
-                <p class="font-bold text-lg leading-tight" id="defending-champ">—</p>
-                <p class="text-slate-400 text-xs mt-1 flex items-center gap-1.5">
-                  <img src="lombardi.jpg" alt="" class="h-4 w-auto object-contain inline-block" />
-                  Super Bowl Champions
-                </p>
-                <p class="champ-signature" id="defending-coach">Coach Ocinco</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
 
-<!-- VODS SECTION -->
-    <section id="section-vods" class="section hidden">
-      <div class="mb-8">
-        <h2 class="text-3xl md:text-4xl font-black tracking-tight mb-2">Past Streams & VODs</h2>
-        <p class="text-slate-400 text-lg mb-6">Relive classic FNSL matchups, draft shows, and Super Bowls.</p>
+// ---------- SCORE / MATCHUP TICKER ----------
+function renderTicker() {
+  const el = document.getElementById('ticker-content');
+  if (!el) return;
 
-        <div class="flex flex-wrap gap-3 mb-6">
-          <input type="search" id="vod-search" placeholder="Search VODs by team, week, season..." 
-                 class="flex-1 min-w-[240px] px-4 py-3 rounded-xl bg-fnsl-card border border-slate-700 focus:border-green-500 outline-none text-base"
-                 oninput="filterVods()">
-          <select id="vod-filter" onchange="filterVods()" class="px-4 py-3 rounded-xl bg-fnsl-card border border-slate-700 outline-none">
-            <option value="all">All Types</option>
-            <option value="game">Games</option>
-            <option value="draft">Drafts</option>
-            <option value="show">Shows / Podcasts</option>
-            <option value="superbowl">Super Bowls</option>
-          </select>
-        </div>
+  const items = FNSL_CONFIG.tickerItems || [];
+  if (items.length === 0) {
+    el.innerHTML = '<span class="ticker-item">FNSL — No updates yet</span>';
+    return;
+  }
 
-        <div id="vod-grid" class="streams-grid">
-          <!-- Populated by JS -->
-        </div>
-      </div>
-    </section>
+  // Duplicate content so the loop scrolls seamlessly
+  const html = items.map(item => {
+    const cls = item.type === 'live' ? 'live-item'
+      : item.type === 'final' ? 'final-item'
+      : '';
+    const prefix = item.type === 'live' ? '● LIVE '
+      : item.type === 'final' ? 'FINAL '
+      : item.type === 'upcoming' ? 'UPCOMING '
+      : '';
+    return `<span class="ticker-item ${cls}">${prefix}${escapeHtml(item.text)}</span><span class="sep">◆</span>`;
+  }).join('');
 
-    <!-- HISTORY SECTION -->
-    <section id="section-history" class="section hidden">
-      <div class="mb-8">
-        <h2 class="text-3xl md:text-4xl font-black tracking-tight mb-2">League History</h2>
-        <p class="text-slate-400 text-lg mb-6">Every FNSL Super Bowl champion. Build the legacy.</p>
-
-        <!-- Champions table -->
-        <div class="rounded-2xl border border-slate-800 overflow-hidden bg-fnsl-card">
-          <div class="overflow-x-auto">
-            <table class="w-full text-left">
-              <thead class="bg-slate-900/80 text-slate-400 text-sm uppercase tracking-wider">
-                <tr>
-                  <th class="px-5 py-4 font-semibold">Season</th>
-                  <th class="px-5 py-4 font-semibold">Super Bowl</th>
-                  <th class="px-5 py-4 font-semibold">Champion</th>
-                  <th class="px-5 py-4 font-semibold">Runner-up</th>
-                  <th class="px-5 py-4 font-semibold">Score</th>
-                  <th class="px-5 py-4 font-semibold">MVP / Notes</th>
-                </tr>
-              </thead>
-              <tbody id="history-tbody" class="divide-y divide-slate-800">
-                <!-- Populated by JS -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- All-time leaders -->
-        <div class="mt-10">
-          <h3 class="text-2xl font-bold mb-4">All-Time Titles</h3>
-          <div id="titles-leaderboard" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            <!-- Populated by JS -->
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- STANDINGS SECTION -->
-    <section id="section-standings" class="section hidden">
-      <div class="mb-8">
-        <h2 class="text-3xl md:text-4xl font-black tracking-tight mb-2">Current Standings</h2>
-        <p class="text-slate-400 text-lg mb-6">Update these from NeonSportz or your league tracker.</p>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div class="rounded-2xl border border-slate-800 bg-fnsl-card overflow-hidden">
-            <div class="px-5 py-4 bg-red-600/20 border-b border-slate-800">
-              <h3 class="font-bold text-lg text-red-300">AFC</h3>
-            </div>
-            <div id="standings-afc" class="divide-y divide-slate-800">
-              <!-- Populated -->
-            </div>
-          </div>
-          <div class="rounded-2xl border border-slate-800 bg-fnsl-card overflow-hidden">
-            <div class="px-5 py-4 bg-blue-600/20 border-b border-slate-800">
-              <h3 class="font-bold text-lg text-blue-300">NFC</h3>
-            </div>
-            <div id="standings-nfc" class="divide-y divide-slate-800">
-              <!-- Populated -->
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- Fullscreen Player Overlay -->
-  <div id="player-overlay" class="fixed inset-0 z-[100] bg-black flex flex-col">
-    <div class="flex items-center justify-between p-4 bg-black/80">
-      <h3 id="player-title" class="font-bold text-lg"></h3>
-      <button onclick="closePlayer()" class="nav-btn p-2 rounded-lg hover:bg-slate-800 text-2xl leading-none">&times;</button>
-    </div>
-    <div class="flex-1 flex items-center justify-center">
-      <div id="player-container" class="w-full h-full max-w-7xl"></div>
-    </div>
-  </div>
-
-  <!-- Footer -->
-  <footer class="border-t border-slate-800 py-8 mt-12">
-    <div class="max-w-[1800px] mx-auto px-6 text-center text-slate-500 text-sm">
-      <div id="social-links-footer" class="flex flex-wrap gap-3 justify-center mb-5"></div>
-      <p>FNSL TV • Father N Son League</p>
-      <p class="mt-1">Works on phones, tablets, computers &amp; TVs</p>
-    </div>
-  </footer>
-
-  <script src="data.js"></script>
-  <script src="app.js"></script>
-  <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-</body>
-</html>
+  el.innerHTML = html + html;
+}

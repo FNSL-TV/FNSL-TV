@@ -1,136 +1,115 @@
-// Vercel Serverless Function
-// GET /api/live?channels=user1,user2
-// Returns which of the listed Twitch channels are currently live.
-//
-// Required Vercel Environment Variables:
-//   TWITCH_CLIENT_ID
-//   TWITCH_CLIENT_SECRET
-//
-// Get both free at: https://dev.twitch.tv/console/apps
+# FNSL TV – Automatic Live Streams
 
-let cachedToken = null;
-let tokenExpiresAt = 0;
+Your Father N Son League streaming + history site, now with **automatic Twitch live detection**.
 
-async function getAppAccessToken(clientId, clientSecret) {
-  const now = Date.now();
-  if (cachedToken && now < tokenExpiresAt - 60_000) {
-    return cachedToken;
+---
+
+## How Automatic Live Detection Works
+
+1. You list every owner’s Twitch username in `data.js` → `twitchChannels`
+2. The site calls a small Vercel function (`/api/live`) every 60 seconds
+3. That function asks Twitch who is currently live
+4. Anyone who is live automatically appears with a red **LIVE** badge
+
+You no longer have to manually flip `isLive: true`.
+
+---
+
+## Step-by-step Setup (do this once)
+
+### 1. Get a free Twitch Client ID
+
+1. Go to → https://dev.twitch.tv/console
+2. Log in with any Twitch account
+3. Click **“Register Your Application”**
+4. Fill in:
+   - **Name**: FNSL TV (or anything)
+   - **OAuth Redirect URLs**: `http://localhost`
+   - **Category**: Website Integration
+5. Click **Create**
+6. Copy the **Client ID** (long string of letters/numbers)
+
+### 2. Add the Client ID to Vercel
+
+1. Go to your project on Vercel
+2. Click **Settings** → **Environment Variables**
+3. Add a new variable:
+   - **Key**: `TWITCH_CLIENT_ID`
+   - **Value**: paste the Client ID you just copied
+4. Enable it for Production, Preview, and Development
+5. Click **Save**
+6. **Redeploy** the project (Deployments → three dots → Redeploy) so the variable is loaded
+
+### 3. List the Twitch usernames in `data.js`
+
+```js
+twitchChannels: [
+  "your_twitch_username",
+  "another_owner",
+  "third_owner"
+],
+```
+
+Also fill the `channel` field inside `featuredStreams` so the cards look nice:
+
+```js
+featuredStreams: [
+  {
+    id: "raiders-home",
+    title: "Las Vegas Raiders • Home Stream",
+    owner: "Dustin (Owner / Coach)",
+    platform: "twitch",
+    channel: "your_twitch_username",   // same as above
+    isLive: false                      // auto-overridden when live
   }
+  // add every owner the same way
+],
+```
 
-  const body = new URLSearchParams({
-    client_id: clientId,
-    client_secret: clientSecret,
-    grant_type: 'client_credentials'
-  });
+### 4. Redeploy
 
-  const res = await fetch('https://id.twitch.tv/oauth2/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body
-  });
+After editing `data.js`, push the changes or re-upload so Vercel rebuilds.
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Twitch token error ${res.status}: ${text}`);
-  }
+---
 
-  const data = await res.json();
-  cachedToken = data.access_token;
-  // expires_in is seconds
-  tokenExpiresAt = now + (data.expires_in || 3600) * 1000;
-  return cachedToken;
-}
+## What you will see
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate');
+- Anyone in `twitchChannels` who is currently live → red LIVE badge + appears at the top
+- Viewer count shown when available
+- Status refreshes automatically every 60 seconds
+- Manual `isLive` flags still work as fallback if the API key is missing
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+---
 
-  const clientId = process.env.TWITCH_CLIENT_ID;
-  const clientSecret = process.env.TWITCH_CLIENT_SECRET;
+## Updating the rest of the data
 
-  if (!clientId || !clientSecret) {
-    return res.status(200).json({
-      ok: false,
-      error: 'Set TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET in Vercel → Project → Settings → Environment Variables, then redeploy.',
-      live: []
-    });
-  }
+- **History / previous winners** → `history` array
+- **VODs** → `vods` array (YouTube video IDs)
+- **Standings** → `standings` object
 
-  const channelsParam = req.query.channels || '';
-  const channels = channelsParam
-    .split(',')
-    .map(c => c.trim().toLowerCase())
-    .filter(Boolean);
+---
 
-  if (channels.length === 0) {
-    return res.status(200).json({ ok: true, live: [], checked: 0 });
-  }
+## Files
 
-  try {
-    const token = await getAppAccessToken(clientId, clientSecret);
+- `index.html` – the page
+- `data.js` – **all your league data lives here**
+- `app.js` – the logic
+- `api/live.js` – the serverless function that talks to Twitch
+- `README.md` – this file
 
-    // Helix allows up to 100 user_login params; batch if needed
-    const batches = [];
-    for (let i = 0; i < channels.length; i += 100) {
-      batches.push(channels.slice(i, i + 100));
-    }
+Enjoy the automatic live streams!
 
-    const live = [];
-    for (const batch of batches) {
-      const url = new URL('https://api.twitch.tv/helix/streams');
-      batch.forEach(c => url.searchParams.append('user_login', c));
+## Automatic live stream detection (Twitch)
 
-      const response = await fetch(url.toString(), {
-        headers: {
-          'Client-ID': clientId,
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/json'
-        }
-      });
+1. Go to https://dev.twitch.tv/console/apps and create an app (any name, OAuth Redirect URL can be `http://localhost`).
+2. Copy the **Client ID**.
+3. Click **New Secret** and copy the **Client Secret**.
+4. In Vercel → your project → **Settings** → **Environment Variables**, add:
+   - `TWITCH_CLIENT_ID` = your Client ID
+   - `TWITCH_CLIENT_SECRET` = your Client Secret
+5. Apply to **Production** (and Preview if you want).
+6. **Redeploy** the project (Deployments → … → Redeploy).
 
-      if (!response.ok) {
-        const text = await response.text();
-        console.error('Twitch streams error:', response.status, text);
-        return res.status(200).json({
-          ok: false,
-          error: `Twitch API returned ${response.status}`,
-          live: []
-        });
-      }
+Without both variables, the site cannot detect who is live and will only use manual `isLive` flags in `data.js`.
 
-      const data = await response.json();
-      for (const stream of data.data || []) {
-        live.push({
-          login: stream.user_login,
-          displayName: stream.user_name,
-          title: stream.title,
-          viewerCount: stream.viewer_count,
-          startedAt: stream.started_at,
-          gameName: stream.game_name,
-          thumbnail: stream.thumbnail_url
-            ? stream.thumbnail_url.replace('{width}', '440').replace('{height}', '248')
-            : null
-        });
-      }
-    }
-
-    return res.status(200).json({
-      ok: true,
-      live,
-      checked: channels.length,
-      timestamp: new Date().toISOString()
-    });
-  } catch (err) {
-    console.error('Live check failed:', err);
-    return res.status(200).json({
-      ok: false,
-      error: err.message || 'Unknown error',
-      live: []
-    });
-  }
-}
+The site checks `/api/live` about once a minute and marks matching channels in `twitchChannels` / `featuredStreams` as live.

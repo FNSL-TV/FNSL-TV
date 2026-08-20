@@ -7,8 +7,10 @@ const FNSL_CONFIG = {
   leagueName: "Father N Son League",
   shortName: "FNSL",
   founded: "2018",
-  currentSeason: "Season 58",
+  cycleSeason: "M27 - S1",      // current Madden cycle (update when new Madden drops)
+  currentSeason: "Season 58",   // lifetime season count (bump after each Super Bowl)
   defendingChamp: "Jacksonville Jaguars",
+  defendingCoach: "Coach Ocinco",
 
   // =========================================================
   // AUTOMATIC LIVE DETECTION
@@ -307,6 +309,17 @@ const FNSL_CONFIG = {
       date: "2026-08-19",
       teams: []
     }
+  ],
+
+  // =========================================================
+  // LEAGUE LEADERS (slideshow) — update from NeonSportz / stats
+  // =========================================================
+  topPlayers: [
+    { pos: "QB", name: "Update Me", team: "Team", stat: "0 YDS / 0 TD", rank: 1 },
+    { pos: "RB", name: "Update Me", team: "Team", stat: "0 YDS / 0 TD", rank: 1 },
+    { pos: "WR", name: "Update Me", team: "Team", stat: "0 YDS / 0 TD", rank: 1 },
+    { pos: "TE", name: "Update Me", team: "Team", stat: "0 YDS / 0 TD", rank: 1 },
+    { pos: "DEF", name: "Update Me", team: "Team", stat: "0 SACKS", rank: 1 }
   ],
 
 

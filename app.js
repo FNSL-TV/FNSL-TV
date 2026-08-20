@@ -28,8 +28,113 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ---------- CONFIG APPLY ----------
 function applyConfig() {
-  document.getElementById('current-season').textContent = FNSL_CONFIG.currentSeason || 'Season ?';
-  document.getElementById('defending-champ').textContent = FNSL_CONFIG.defendingChamp || '—';
+  const cycleEl = document.getElementById('cycle-season');
+  if (cycleEl) cycleEl.textContent = FNSL_CONFIG.cycleSeason || 'M27 - S1';
+  const seasonEl = document.getElementById('current-season');
+  if (seasonEl) seasonEl.textContent = FNSL_CONFIG.currentSeason || 'Season ?';
+  const champEl = document.getElementById('defending-champ');
+  if (champEl) champEl.textContent = FNSL_CONFIG.defendingChamp || '—';
+  const coachEl = document.getElementById('defending-coach');
+  if (coachEl) coachEl.textContent = FNSL_CONFIG.defendingCoach || '';
+
+
+  // Champ team logo
+  const champLogo = document.getElementById('champ-logo');
+  if (champLogo && FNSL_CONFIG.defendingChamp) {
+    const name = FNSL_CONFIG.defendingChamp.toLowerCase();
+    const abbrMap = {
+      'jacksonville jaguars': 'jax', 'las vegas raiders': 'lv', 'atlanta falcons': 'atl',
+      'seattle seahawks': 'sea', 'new york giants': 'nyg', 'detroit lions': 'det',
+      'kansas city chiefs': 'kc', 'philadelphia eagles': 'phi', 'green bay packers': 'gb',
+      'dallas cowboys': 'dal', 'san francisco 49ers': 'sf', 'buffalo bills': 'buf',
+      'baltimore ravens': 'bal', 'cincinnati bengals': 'cin', 'miami dolphins': 'mia',
+      'new england patriots': 'ne', 'chicago bears': 'chi', 'minnesota vikings': 'min',
+      'carolina panthers': 'car', 'tampa bay buccaneers': 'tb', 'arizona cardinals': 'ari',
+      'los angeles rams': 'lar', 'los angeles chargers': 'lac', 'denver broncos': 'den',
+      'houston texans': 'hou', 'indianapolis colts': 'ind', 'tennessee titans': 'ten',
+      'pittsburgh steelers': 'pit', 'cleveland browns': 'cle', 'new york jets': 'nyj',
+      'washington commanders': 'wsh', 'washington football team': 'wsh', 'new orleans saints': 'no'
+    };
+    let abbr = null;
+    for (const [key, val] of Object.entries(abbrMap)) {
+      if (name.includes(key) || key.includes(name)) { abbr = val; break; }
+    }
+    // also try matching last word
+    if (!abbr) {
+      const last = name.split(' ').pop();
+      for (const [key, val] of Object.entries(abbrMap)) {
+        if (key.includes(last)) { abbr = val; break; }
+      }
+    }
+    if (abbr) {
+      champLogo.src = `https://a.espncdn.com/i/teamlogos/nfl/500/${abbr}.png`;
+      champLogo.style.display = 'block';
+      champLogo.alt = FNSL_CONFIG.defendingChamp;
+    }
+  }
+
+  startStatsSlideshow();
+}
+
+// ---------- LEAGUE LEADERS SLIDESHOW ----------
+let statsSlideIndex = 0;
+let statsSlideTimer = null;
+
+function startStatsSlideshow() {
+  const container = document.getElementById('stats-slideshow');
+  const dots = document.getElementById('stats-dots');
+  if (!container) return;
+
+  const players = FNSL_CONFIG.topPlayers || [];
+  if (players.length === 0) {
+    container.innerHTML = '<p class="text-slate-400 text-sm">Leaders update after Week 1</p>';
+    return;
+  }
+
+  container.innerHTML = players.map((p, i) => `
+    <div class="stat-slide ${i === 0 ? 'active' : ''}" data-idx="${i}">
+      <div class="flex items-baseline justify-between gap-2">
+        <span class="text-xs font-bold text-purple-300 uppercase">${escapeHtml(p.pos)}</span>
+        <span class="text-xs text-slate-500">#${p.rank || 1}</span>
+      </div>
+      <p class="font-bold text-lg leading-tight mt-1">${escapeHtml(p.name)}</p>
+      <p class="text-slate-400 text-sm">${escapeHtml(p.team)} · ${escapeHtml(p.stat)}</p>
+    </div>
+  `).join('');
+
+  if (dots) {
+    dots.innerHTML = players.map((_, i) =>
+      `<button class="w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-purple-400' : 'bg-slate-600'} stats-dot" data-idx="${i}" aria-label="Slide ${i+1}"></button>`
+    ).join('');
+    dots.querySelectorAll('.stats-dot').forEach(btn => {
+      btn.addEventListener('click', () => {
+        statsSlideIndex = parseInt(btn.dataset.idx, 10);
+        showStatsSlide(statsSlideIndex);
+        resetStatsTimer();
+      });
+    });
+  }
+
+  resetStatsTimer();
+}
+
+function showStatsSlide(idx) {
+  const slides = document.querySelectorAll('.stat-slide');
+  const dots = document.querySelectorAll('.stats-dot');
+  if (!slides.length) return;
+  statsSlideIndex = ((idx % slides.length) + slides.length) % slides.length;
+  slides.forEach((s, i) => s.classList.toggle('active', i === statsSlideIndex));
+  dots.forEach((d, i) => {
+    d.classList.toggle('bg-purple-400', i === statsSlideIndex);
+    d.classList.toggle('bg-slate-600', i !== statsSlideIndex);
+  });
+}
+
+function resetStatsTimer() {
+  if (statsSlideTimer) clearInterval(statsSlideTimer);
+  statsSlideTimer = setInterval(() => {
+    showStatsSlide(statsSlideIndex + 1);
+  }, 4000);
 }
 
 // ---------- NAVIGATION ----------

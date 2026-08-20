@@ -13,6 +13,37 @@ const FNSL_CONFIG = {
   defendingCoach: "Coach Ocinco",
 
   // =========================================================
+  // SOCIAL / COMMUNITY LINKS (logo buttons on the site)
+  // Leave url empty ("") to hide that button
+  // =========================================================
+  socialLinks: [
+    {
+      id: "discord",
+      label: "Discord",
+      url: "https://discord.gg/eQ8UDrzyZp",
+      color: "#5865F2"
+    },
+    {
+      id: "youtube",
+      label: "YouTube",
+      url: "https://www.youtube.com/@fnslmadden",
+      color: "#FF0000"
+    },
+    {
+      id: "x",
+      label: "X",
+      url: "https://x.com/FNSLMadden",
+      color: "#e7e9ea"
+    },
+    {
+      id: "neonsportz",
+      label: "NeonSportz",
+      url: "https://neonsportz.com/leagues/FNSL",
+      color: "#22c55e"
+    }
+  ],
+
+  // =========================================================
   // AUTOMATIC LIVE DETECTION
   // =========================================================
   twitchChannels: [
@@ -298,6 +329,62 @@ const FNSL_CONFIG = {
   // PAST VODs (add YouTube IDs later as you upload them)
   // =========================================================
   vods: [
+    // Chronological — older FNSL content first
+    {
+      id: "vod-podcast-ep1a",
+      title: "Podcast EP 1",
+      description: "FNSL Podcast Episode 1",
+      type: "show",
+      season: "",
+      platform: "youtube",
+      videoId: "TkJfcJo0xck",
+      date: "2020-01-01",
+      teams: []
+    },
+    {
+      id: "vod-podcast-ep1b",
+      title: "FNSL Podcast EP 1",
+      description: "FNSL Podcast Episode 1",
+      type: "show",
+      season: "",
+      platform: "youtube",
+      videoId: "kQrBSRkt2Tg",
+      date: "2020-01-02",
+      teams: []
+    },
+    {
+      id: "vod-amari-interview",
+      title: "Amari Post Game Interview",
+      description: "Post-game interview — Made with Clipchamp",
+      type: "interview",
+      season: "",
+      platform: "youtube",
+      videoId: "VM_nIIEH0R4",
+      date: "2020-06-01",
+      teams: []
+    },
+    {
+      id: "vod-podcast-ep3",
+      title: "FNSL Podcast EP 3",
+      description: "FNSL Podcast Episode 3",
+      type: "show",
+      season: "",
+      platform: "youtube",
+      videoId: "kq9PQ7XZCL0",
+      date: "2021-01-01",
+      teams: []
+    },
+    {
+      id: "vod-podcast-ep4",
+      title: "FNSL Podcast EP 4",
+      description: "FNSL Podcast Episode 4",
+      type: "show",
+      season: "",
+      platform: "youtube",
+      videoId: "08VyLP2MZGI",
+      date: "2021-06-01",
+      teams: []
+    },
     {
       id: "vod-1",
       title: "FNSL Stream / Game VOD",
@@ -309,6 +396,32 @@ const FNSL_CONFIG = {
       date: "2026-08-19",
       teams: []
     }
+  ],
+
+  // =========================================================
+  // TICKER — scores, matchups, announcements (scrolls on bottom)
+  // type: "final" | "live" | "upcoming" | "note"
+  // =========================================================
+  tickerItems: [
+    { type: "note", text: "FNSL Preseason Week 1 — Games on the board" },
+    { type: "upcoming", text: "Colts @ Patriots" },
+    { type: "upcoming", text: "Chargers @ Texans" },
+    { type: "upcoming", text: "Lions @ Bengals" },
+    { type: "upcoming", text: "Cowboys @ Seahawks" },
+    { type: "upcoming", text: "Browns @ Bears" },
+    { type: "upcoming", text: "Panthers @ Bills" },
+    { type: "upcoming", text: "Dolphins @ Commanders" },
+    { type: "upcoming", text: "Packers @ Steelers" },
+    { type: "upcoming", text: "Titans @ 49ers" },
+    { type: "upcoming", text: "Eagles @ Ravens" },
+    { type: "upcoming", text: "Jaguars @ Saints" },
+    { type: "upcoming", text: "Rams @ Chiefs" },
+    { type: "upcoming", text: "Vikings @ Giants" },
+    { type: "upcoming", text: "Buccaneers @ Jets" },
+    { type: "upcoming", text: "Broncos @ Falcons" },
+    { type: "upcoming", text: "Cardinals @ Raiders" },
+    { type: "final", text: "SB LVII Champions: Jacksonville Jaguars (Coach Ocinco)" },
+    { type: "note", text: "Watch live streams on FNSL.TV • Join Discord" },
   ],
 
   // =========================================================

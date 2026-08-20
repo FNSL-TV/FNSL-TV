@@ -161,6 +161,106 @@
       transform: rotate(-2deg);
       display: inline-block;
     }
+    .social-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.45rem;
+      border-radius: 0.75rem;
+      background: rgba(18, 18, 26, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      color: #e2e8f0;
+      font-size: 0.8rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+    .social-btn span { display: none; }
+    @media (min-width: 1024px) {
+      .social-btn { padding: 0.45rem 0.75rem; }
+      .social-btn span { display: inline; }
+    }
+    .social-btn:hover, .social-btn:focus-visible {
+      transform: translateY(-1px);
+      border-color: currentColor;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+    }
+    .social-btn svg { width: 1.15rem; height: 1.15rem; flex-shrink: 0; }
+    #social-links-footer .social-btn span { display: inline; }
+    #social-links-footer .social-btn { padding: 0.55rem 1rem; border-radius: 9999px; }
+    /* ===== FNSL SCORE TICKER ===== */
+    #fnsl-ticker {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 40;
+      height: 40px;
+      background: linear-gradient(90deg, #0a0a0f 0%, #12121a 15%, #12121a 85%, #0a0a0f 100%);
+      border-top: 1px solid rgba(34, 197, 94, 0.35);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+    }
+    @media (max-width: 767px) {
+      #fnsl-ticker { bottom: 58px; } /* sit above mobile nav */
+      main { padding-bottom: 7rem !important; }
+    }
+    @media (min-width: 768px) {
+      main { padding-bottom: 4rem !important; }
+      footer { padding-bottom: 3rem; }
+    }
+    #fnsl-ticker .ticker-label {
+      flex-shrink: 0;
+      background: #22c55e;
+      color: #0a0a0f;
+      font-weight: 800;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0 0.85rem;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      z-index: 2;
+    }
+    #fnsl-ticker .ticker-track {
+      flex: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      position: relative;
+    }
+    #fnsl-ticker .ticker-content {
+      display: inline-block;
+      padding-left: 100%;
+      animation: ticker-scroll 45s linear infinite;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+    #fnsl-ticker .ticker-content:hover {
+      animation-play-state: paused;
+    }
+    #fnsl-ticker .ticker-item {
+      display: inline-block;
+      padding: 0 1.75rem;
+    }
+    #fnsl-ticker .ticker-item .sep {
+      color: #22c55e;
+      margin: 0 0.35rem;
+      opacity: 0.7;
+    }
+    #fnsl-ticker .ticker-item.live-item {
+      color: #f87171;
+    }
+    #fnsl-ticker .ticker-item.final-item {
+      color: #94a3b8;
+    }
+    @keyframes ticker-scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
   </style>
 </head>
 <body class="bg-fnsl-bg text-slate-100 min-h-screen">
@@ -192,11 +292,12 @@
           <button onclick="showSection('standings')" class="nav-btn px-4 py-2 rounded-lg font-semibold text-sm hover:bg-slate-800 focus:bg-slate-800" data-section="standings">Standings</button>
         </nav>
 
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 sm:gap-3">
           <div id="live-badge" class="hidden items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/20 border border-red-500/40">
             <span class="w-2 h-2 rounded-full bg-red-500 live-dot"></span>
             <span class="text-sm font-bold text-red-400" id="live-count">0 LIVE</span>
           </div>
+          <div id="social-links" class="flex items-center gap-1.5"></div>
           <button onclick="toggleFullscreen()" class="nav-btn p-2 rounded-lg hover:bg-slate-800" title="Fullscreen" aria-label="Toggle fullscreen">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
           </button>
@@ -204,6 +305,16 @@
       </div>
     </div>
   </header>
+
+  <!-- Score / Matchup Ticker -->
+  <div id="fnsl-ticker" aria-label="League ticker">
+    <div class="ticker-label">FNSL</div>
+    <div class="ticker-track">
+      <div class="ticker-content" id="ticker-content">
+        <!-- filled by JS -->
+      </div>
+    </div>
+  </div>
 
   <!-- Mobile Nav -->
   <div class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-fnsl-card border-t border-slate-800 flex justify-around py-2">
@@ -311,7 +422,31 @@
       </div>
     </section>
 
-    <!-- VODS SECTION -->
+    
+      <!-- League X Feed -->
+      <div class="mt-12" id="x-feed-section">
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-4">
+          <div>
+            <h3 class="text-2xl font-bold">League X Feed</h3>
+            <p class="text-slate-400 text-sm mt-1">Posts from <a href="https://x.com/FNSLMadden" target="_blank" rel="noopener" class="text-green-400 hover:underline">@FNSLMadden</a> · Tag <span class="text-slate-200">@FNSLMadden</span> and use <span class="text-slate-200">#FNSL</span> to show up here</p>
+          </div>
+          <a href="https://x.com/FNSLMadden" target="_blank" rel="noopener" class="social-btn" style="color:#e7e9ea; padding: 0.45rem 0.9rem; border-radius: 9999px;">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width:1.1rem;height:1.1rem"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            <span style="display:inline">Open on X</span>
+          </a>
+        </div>
+        <div class="rounded-2xl border border-slate-800 bg-fnsl-card overflow-hidden p-3 md:p-4">
+          <a class="twitter-timeline"
+             data-theme="dark"
+             data-chrome="noheader nofooter noborders transparent"
+             data-height="520"
+             href="https://twitter.com/FNSLMadden?ref_src=twsrc%5Etfw">
+            Posts by @FNSLMadden
+          </a>
+        </div>
+      </div>
+
+<!-- VODS SECTION -->
     <section id="section-vods" class="section hidden">
       <div class="mb-8">
         <h2 class="text-3xl md:text-4xl font-black tracking-tight mb-2">Past Streams & VODs</h2>
@@ -414,14 +549,16 @@
   </div>
 
   <!-- Footer -->
-  <footer class="border-t border-slate-800 py-8 mt-12 hidden md:block">
+  <footer class="border-t border-slate-800 py-8 mt-12">
     <div class="max-w-[1800px] mx-auto px-6 text-center text-slate-500 text-sm">
-      <p>FNSL TV • Built for the Father N Son League</p>
+      <div id="social-links-footer" class="flex flex-wrap gap-3 justify-center mb-5"></div>
+      <p>FNSL TV • Father N Son League</p>
       <p class="mt-1">Works on phones, tablets, computers &amp; TVs</p>
     </div>
   </footer>
 
   <script src="data.js"></script>
   <script src="app.js"></script>
+  <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 </body>
 </html>

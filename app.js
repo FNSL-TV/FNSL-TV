@@ -279,9 +279,15 @@ function renderLiveStreams() {
     container.appendChild(createStreamCard(stream));
   });
 
-  statusText.textContent = liveOnes.length > 0
-    ? `${liveOnes.length} stream${liveOnes.length > 1 ? 's' : ''} live right now`
-    : 'No one is live — check VODs or come back later';
+  if (liveApiOk) {
+    statusText.textContent = liveOnes.length > 0
+      ? `${liveOnes.length} stream${liveOnes.length > 1 ? 's' : ''} live right now`
+      : 'No one is live — check VODs or come back later';
+  } else if (!statusText.textContent.includes('auto-detect')) {
+    statusText.textContent = liveOnes.length > 0
+      ? `${liveOnes.length} stream${liveOnes.length > 1 ? 's' : ''} live right now`
+      : 'No one is live — check VODs or come back later';
+  }
 
   updateLiveBadge(liveOnes.length);
 }

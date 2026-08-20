@@ -1,6 +1,6 @@
 // ============================================================
 // FNSL TV - Application Logic
-// Optimized for LG webOS / Smart TVs + modern browsers
+// Works on any modern browser
 // Now with automatic Twitch live detection
 // ============================================================
 
@@ -173,6 +173,30 @@ function renderLiveStreams() {
   updateLiveBadge(liveOnes.length);
 }
 
+// NFL team logo lookup (ESPN CDN)
+const TEAM_LOGO_ABBR = {
+  raiders: 'lv', packers: 'gb', bears: 'chi', giants: 'nyg', eagles: 'phi',
+  patriots: 'ne', colts: 'ind', rams: 'lar', chiefs: 'kc', cardinals: 'ari',
+  commanders: 'wsh', texans: 'hou', titans: 'ten', steelers: 'pit', dolphins: 'mia',
+  lions: 'det', panthers: 'car', vikings: 'min', cowboys: 'dal', chargers: 'lac',
+  broncos: 'den', '49ers': 'sf', bengals: 'cin', jets: 'nyj', seahawks: 'sea',
+  buccaneers: 'tb', falcons: 'atl', ravens: 'bal', browns: 'cle', jaguars: 'jax',
+  bills: 'buf', saints: 'no'
+};
+
+function getTeamLogoUrl(stream) {
+  const id = (stream.id || '').toLowerCase();
+  const abbr = TEAM_LOGO_ABBR[id];
+  if (abbr) return `https://a.espncdn.com/i/teamlogos/nfl/500/${abbr}.png`;
+  const title = (stream.title || '').toLowerCase();
+  for (const [key, val] of Object.entries(TEAM_LOGO_ABBR)) {
+    if (title.includes(key)) {
+      return `https://a.espncdn.com/i/teamlogos/nfl/500/${val}.png`;
+    }
+  }
+  return null;
+}
+
 function createStreamCard(stream) {
   const card = document.createElement('div');
   card.className = 'stream-card tv-card rounded-2xl bg-fnsl-card border border-slate-800 overflow-hidden cursor-pointer group focus:outline-none';
@@ -181,11 +205,16 @@ function createStreamCard(stream) {
 
   const isLive = stream.isLive;
   const viewers = stream.viewerCount ? `${stream.viewerCount} watching` : '';
+  const logoUrl = getTeamLogoUrl(stream);
+  // Live preview from Twitch (updates while streaming)
+  const previewUrl = (isLive && stream.channel)
+    ? `https://static-cdn.jtvnw.net/previews-ttv/live_user_${encodeURIComponent(stream.channel.toLowerCase())}-640x360.jpg?t=${Date.now()}`
+    : null;
 
   card.innerHTML = `
     <div class="relative aspect-video bg-slate-900 overflow-hidden">
       ${isLive ? `
-        <div class="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-600 text-xs font-bold uppercase tracking-wide">
+        <div class="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-600 text-xs font-bold uppercase tracking-wide shadow">
           <span class="w-1.5 h-1.5 rounded-full bg-white live-dot"></span> LIVE
         </div>
       ` : `
@@ -193,8 +222,12 @@ function createStreamCard(stream) {
           Offline
         </div>
       `}
-      <div class="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br from-slate-800 to-slate-900">
-        ${isLive ? '🔴' : '📺'}
+      <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900">
+        ${previewUrl
+          ? `<img src="${previewUrl}" alt="Live preview" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerHTML='${logoUrl ? `<img src=\'${logoUrl}\' class=\'w-20 h-20 object-contain\' />` : '🔴'}';" />`
+          : (logoUrl
+            ? `<img src="${logoUrl}" alt="" class="w-20 h-20 object-contain opacity-90 group-hover:scale-110 transition duration-300" onerror="this.style.display='none'" />`
+            : `<span class="text-4xl">📺</span>`)}
       </div>
       <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition flex items-center justify-center">
         <div class="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center shadow-xl">
@@ -205,8 +238,11 @@ function createStreamCard(stream) {
     <div class="p-4">
       <h3 class="font-bold text-lg leading-tight line-clamp-2">${escapeHtml(stream.title || 'Untitled Stream')}</h3>
       <p class="text-slate-400 text-sm mt-1">${escapeHtml(stream.owner || stream.channel || '')}</p>
-      <div class="flex items-center justify-between mt-2 text-xs text-slate-500">
-        <span class="uppercase tracking-wide">${stream.platform || 'stream'}</span>
+      <div class="flex items-center justify-between mt-3 text-xs text-slate-500">
+        <div class="flex items-center gap-2">
+          ${logoUrl ? `<img src="${logoUrl}" alt="" class="w-6 h-6 object-contain" onerror="this.style.display='none'" />` : ''}
+          <span class="uppercase tracking-wide">${stream.platform || 'stream'}</span>
+        </div>
         <span>${viewers}</span>
       </div>
     </div>
@@ -448,6 +484,7 @@ function renderHistory() {
     });
   }
 }
+
 
 // ---------- STANDINGS ----------
 function renderStandings() {

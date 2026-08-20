@@ -309,6 +309,7 @@ const FNSL_CONFIG = {
     }
   ],
 
+
   // =========================================================
   // LEAGUE HISTORY – All 57 Super Bowls locked in
   // =========================================================
@@ -392,40 +393,40 @@ const FNSL_CONFIG = {
   // =========================================================
   standings: {
     afc: [
-      { team: "Jacksonville Jaguars", record: "0-0", owner: "Coach Ocinco" },
-      { team: "Las Vegas Raiders", record: "0-0", owner: "Dustin" },
-      { team: "Kansas City Chiefs", record: "0-0", owner: "tr904" },
-      { team: "Baltimore Ravens", record: "0-0", owner: "Tchanka" },
-      { team: "Cincinnati Bengals", record: "0-0", owner: "dellis19" },
-      { team: "Miami Dolphins", record: "0-0", owner: "CoolCam" },
-      { team: "New England Patriots", record: "0-0", owner: "Primetime" },
-      { team: "New York Jets", record: "0-0", owner: "YoungMoses" },
-      { team: "Pittsburgh Steelers", record: "0-0", owner: "AlmoneyDMG" },
-      { team: "Cleveland Browns", record: "0-0", owner: "Mr.Notification" },
-      { team: "Houston Texans", record: "0-0", owner: "HighlyAnti" },
-      { team: "Indianapolis Colts", record: "0-0", owner: "Willie" },
-      { team: "Tennessee Titans", record: "0-0", owner: "Coach Ocinco" },
-      { team: "Denver Broncos", record: "0-0", owner: "Vurm" },
-      { team: "Los Angeles Chargers", record: "0-0", owner: "Quailman" },
-      { team: "Buffalo Bills", record: "0-0", owner: "" }
+      { team: "Buffalo Bills", record: "16-1", owner: "" },
+      { team: "Jacksonville Jaguars", record: "14-3", owner: "Coach Ocinco" },
+      { team: "New York Jets", record: "13-4", owner: "YoungMoses" },
+      { team: "Indianapolis Colts", record: "13-4", owner: "Willie" },
+      { team: "Denver Broncos", record: "12-5", owner: "Vurm" },
+      { team: "Cincinnati Bengals", record: "10-7", owner: "dellis19" },
+      { team: "New England Patriots", record: "8-9", owner: "Primetime" },
+      { team: "Pittsburgh Steelers", record: "8-9", owner: "AlmoneyDMG" },
+      { team: "Houston Texans", record: "6-11", owner: "HighlyAnti" },
+      { team: "Cleveland Browns", record: "6-11", owner: "Mr.Notification" },
+      { team: "Kansas City Chiefs", record: "6-11", owner: "tr904" },
+      { team: "Los Angeles Chargers", record: "5-12", owner: "Quailman" },
+      { team: "Las Vegas Raiders", record: "3-14", owner: "Dustin" },
+      { team: "Tennessee Titans", record: "1-16", owner: "Coach Ocinco" },
+      { team: "Miami Dolphins", record: "1-16", owner: "CoolCam" },
+      { team: "Baltimore Ravens", record: "1-16", owner: "Tchanka" },
     ],
     nfc: [
-      { team: "Philadelphia Eagles", record: "0-0", owner: "Stu" },
-      { team: "Dallas Cowboys", record: "0-0", owner: "Jordan" },
-      { team: "San Francisco 49ers", record: "0-0", owner: "RJ" },
-      { team: "Detroit Lions", record: "0-0", owner: "DaytoDayDavis" },
-      { team: "Green Bay Packers", record: "0-0", owner: "COOP" },
-      { team: "Minnesota Vikings", record: "0-0", owner: "Rod" },
-      { team: "Chicago Bears", record: "0-0", owner: "Keezy" },
-      { team: "New York Giants", record: "0-0", owner: "Smokie" },
-      { team: "Washington Commanders", record: "0-0", owner: "Redskins4life" },
-      { team: "Atlanta Falcons", record: "0-0", owner: "BWO" },
-      { team: "Carolina Panthers", record: "0-0", owner: "countryswag77" },
-      { team: "New Orleans Saints", record: "0-0", owner: "" },
-      { team: "Tampa Bay Buccaneers", record: "0-0", owner: "Vjackson" },
-      { team: "Arizona Cardinals", record: "0-0", owner: "BDog" },
-      { team: "Los Angeles Rams", record: "0-0", owner: "Jay B" },
-      { team: "Seattle Seahawks", record: "0-0", owner: "Patrik" }
+      { team: "Atlanta Falcons", record: "17-0", owner: "BWO" },
+      { team: "Seattle Seahawks", record: "16-1", owner: "Patrik" },
+      { team: "New York Giants", record: "15-2", owner: "Smokie" },
+      { team: "Detroit Lions", record: "13-4", owner: "DaytoDayDavis" },
+      { team: "Arizona Cardinals", record: "11-6", owner: "BDog" },
+      { team: "Chicago Bears", record: "11-6", owner: "Keezy" },
+      { team: "Green Bay Packers", record: "10-7", owner: "COOP" },
+      { team: "Los Angeles Rams", record: "10-7", owner: "Jay B" },
+      { team: "Carolina Panthers", record: "10-7", owner: "countryswag77" },
+      { team: "Tampa Bay Buccaneers", record: "9-8", owner: "Vjackson" },
+      { team: "Philadelphia Eagles", record: "9-8", owner: "Stu" },
+      { team: "Washington Commanders", record: "7-10", owner: "Redskins4life" },
+      { team: "San Francisco 49ers", record: "3-14", owner: "RJ" },
+      { team: "Dallas Cowboys", record: "3-14", owner: "Jordan" },
+      { team: "Minnesota Vikings", record: "3-14", owner: "Rod" },
+      { team: "New Orleans Saints", record: "2-15", owner: "" },
     ]
   }
 };

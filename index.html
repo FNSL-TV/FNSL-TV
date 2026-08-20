@@ -86,6 +86,11 @@
         grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
       }
     }
+    @media (min-width: 1280px) {
+      #section-live .streams-grid {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      }
+    }
     /* ===== FIELD + FNSL LOGO BACKDROP ===== */
     #site-backdrop {
       position: fixed;
@@ -364,16 +369,43 @@
           </button>
         </div>
 
-        <!-- Live streams grid -->
-        <div id="live-streams" class="streams-grid">
-          <!-- Populated by JS -->
-        </div>
+        <!-- Streams + X feed columns -->
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+          <!-- Left: live streams -->
+          <div class="xl:col-span-8 min-w-0">
+            <div id="live-streams" class="streams-grid">
+              <!-- Populated by JS -->
+            </div>
+            <div id="no-live" class="hidden text-center py-16 rounded-2xl border border-dashed border-slate-700 bg-fnsl-card/50">
+              <div class="text-5xl mb-4">😴</div>
+              <h3 class="text-xl font-bold mb-2">No streams currently live</h3>
+              <p class="text-slate-400 max-w-md mx-auto">When league members go live on Twitch, they'll appear here. You can also add channels in the config.</p>
+            </div>
+          </div>
 
-        <!-- Empty state -->
-        <div id="no-live" class="hidden text-center py-16 rounded-2xl border border-dashed border-slate-700 bg-fnsl-card/50">
-          <div class="text-5xl mb-4">😴</div>
-          <h3 class="text-xl font-bold mb-2">No streams currently live</h3>
-          <p class="text-slate-400 max-w-md mx-auto">When league members go live on Twitch, they'll appear here. You can also add channels in the config.</p>
+          <!-- Right: League X Feed -->
+          <aside class="xl:col-span-4" id="x-feed-section">
+            <div class="xl:sticky xl:top-24">
+              <div class="flex items-center justify-between gap-2 mb-3">
+                <div>
+                  <h3 class="text-lg font-bold">League X Feed</h3>
+                  <p class="text-slate-400 text-xs mt-0.5">Tag <span class="text-slate-200">@FNSLMadden</span> · <span class="text-slate-200">#FNSL</span></p>
+                </div>
+                <a href="https://x.com/FNSLMadden" target="_blank" rel="noopener" class="social-btn" style="color:#e7e9ea" title="Open @FNSLMadden">
+                  <svg viewBox="0 0 24 24" fill="currentColor" style="width:1.1rem;height:1.1rem"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                </a>
+              </div>
+              <div class="rounded-2xl border border-slate-800 bg-fnsl-card overflow-hidden p-2">
+                <a class="twitter-timeline"
+                   data-theme="dark"
+                   data-chrome="noheader nofooter noborders transparent"
+                   data-height="640"
+                   href="https://twitter.com/FNSLMadden?ref_src=twsrc%5Etfw">
+                  Posts by @FNSLMadden
+                </a>
+              </div>
+            </div>
+          </aside>
         </div>
       </div>
 
@@ -421,30 +453,6 @@
         </div>
       </div>
     </section>
-
-    
-      <!-- League X Feed -->
-      <div class="mt-12" id="x-feed-section">
-        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-4">
-          <div>
-            <h3 class="text-2xl font-bold">League X Feed</h3>
-            <p class="text-slate-400 text-sm mt-1">Posts from <a href="https://x.com/FNSLMadden" target="_blank" rel="noopener" class="text-green-400 hover:underline">@FNSLMadden</a> · Tag <span class="text-slate-200">@FNSLMadden</span> and use <span class="text-slate-200">#FNSL</span> to show up here</p>
-          </div>
-          <a href="https://x.com/FNSLMadden" target="_blank" rel="noopener" class="social-btn" style="color:#e7e9ea; padding: 0.45rem 0.9rem; border-radius: 9999px;">
-            <svg viewBox="0 0 24 24" fill="currentColor" style="width:1.1rem;height:1.1rem"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-            <span style="display:inline">Open on X</span>
-          </a>
-        </div>
-        <div class="rounded-2xl border border-slate-800 bg-fnsl-card overflow-hidden p-3 md:p-4">
-          <a class="twitter-timeline"
-             data-theme="dark"
-             data-chrome="noheader nofooter noborders transparent"
-             data-height="520"
-             href="https://twitter.com/FNSLMadden?ref_src=twsrc%5Etfw">
-            Posts by @FNSLMadden
-          </a>
-        </div>
-      </div>
 
 <!-- VODS SECTION -->
     <section id="section-vods" class="section hidden">

@@ -1,578 +1,770 @@
 // ============================================================
-// FNSL TV - CONFIG & DATA  (LOCKED IN - permanent base data)
-// Father N Son League
+// FNSL TV - Application Logic
+// Works on any modern browser
+// Now with automatic Twitch live detection
 // ============================================================
 
-const FNSL_CONFIG = {
-  leagueName: "Father N Son League",
-  shortName: "FNSL",
-  founded: "2018",
-  cycleSeason: "M27 - S1",      // current Madden cycle (update when new Madden drops)
-  currentSeason: "Season 58",   // lifetime season count (bump after each Super Bowl)
-  defendingChamp: "Jacksonville Jaguars",
-  defendingCoach: "Coach Ocinco",
+let currentSection = 'live';
+let filteredVods = [];
+let liveStatusCache = {};       // { username: { isLive, title, viewerCount, ... } }
+let liveApiOk = false;           // true only when /api/live returned ok:true
+let lastLiveCheck = 0;
 
-  // =========================================================
-  // SOCIAL / COMMUNITY LINKS (logo buttons on the site)
-  // Leave url empty ("") to hide that button
-  // =========================================================
-  socialLinks: [
-    {
-      id: "discord",
-      label: "Discord",
-      url: "https://discord.gg/eQ8UDrzyZp",
-      color: "#5865F2"
-    },
-    {
-      id: "youtube",
-      label: "YouTube",
-      url: "https://www.youtube.com/@fnslmadden",
-      color: "#FF0000"
-    },
-    {
-      id: "x",
-      label: "X",
-      url: "https://x.com/FNSLMadden",
-      color: "#e7e9ea"
-    },
-    {
-      id: "neonsportz",
-      label: "NeonSportz",
-      url: "https://neonsportz.com/leagues/FNSL",
-      color: "#22c55e"
-    }
-  ],
-
-  // =========================================================
-  // AUTOMATIC LIVE DETECTION
-  // =========================================================
-  twitchChannels: [
-    "fnsldu5t1n812",
-    "cooprelax",
-    "tvkeez",
-    "mr_smokie",
-    "stu07172008",
-    "primestudio1",
-    "fearcloakk",
-    "jay_biebz",
-    "tr904",
-    "bdog5123",
-    "httr_gaming_18",
-    "anticartier",
-    "coachocinco",
-    "almoeydmg",
-    "coolcam_1324__",
-    "fazedarkskin931",
-    "countryswag77",
-    "hotrod55_spf",
-    "jordannoair",
-    "quailman1738",
-    "vurmiciousknid",
-    "rjthedesigner",
-    "dellis19",
-    "youngmosesgaming",
-    "sanchez_717",
-    "beans6613",
-    "iambwo4life",
-    "th30nlyeagle",
-    "jayydash23",
-    "bignewff",
-    "amazingcar678"
-  ],
-
-  // =========================================================
-  // FEATURED STREAMS (all teams)
-  // =========================================================
-  featuredStreams: [
-    {
-      id: "raiders",
-      title: "Las Vegas Raiders • Stream",
-      owner: "Dustin (Owner / Coach)",
-      platform: "twitch",
-      channel: "fnsldu5t1n812",
-      isLive: false
-    },
-    {
-      id: "packers",
-      title: "Green Bay Packers • Stream",
-      owner: "COOP (Owner / Coach)",
-      platform: "twitch",
-      channel: "cooprelax",
-      isLive: false
-    },
-    {
-      id: "bears",
-      title: "Chicago Bears • Stream",
-      owner: "Keezy (Owner / Coach)",
-      platform: "twitch",
-      channel: "tvkeez",
-      isLive: false
-    },
-    {
-      id: "giants",
-      title: "New York Giants • Stream",
-      owner: "Smokie (Owner / Coach)",
-      platform: "twitch",
-      channel: "mr_smokie",
-      isLive: false
-    },
-    {
-      id: "eagles",
-      title: "Philadelphia Eagles • Stream",
-      owner: "Stu (Owner / Coach)",
-      platform: "twitch",
-      channel: "stu07172008",
-      isLive: false
-    },
-    {
-      id: "patriots",
-      title: "New England Patriots • Stream",
-      owner: "Primetime (Owner / Coach)",
-      platform: "twitch",
-      channel: "primestudio1",
-      isLive: false
-    },
-    {
-      id: "colts",
-      title: "Indianapolis Colts • Stream",
-      owner: "Willie (Owner / Coach)",
-      platform: "twitch",
-      channel: "fearcloakk",
-      isLive: false
-    },
-    {
-      id: "rams",
-      title: "Los Angeles Rams • Stream",
-      owner: "Jay B (Owner / Coach)",
-      platform: "twitch",
-      channel: "jay_biebz",
-      isLive: false
-    },
-    {
-      id: "chiefs",
-      title: "Kansas City Chiefs • Stream",
-      owner: "tr904 (Owner / Coach)",
-      platform: "twitch",
-      channel: "tr904",
-      isLive: false
-    },
-    {
-      id: "cardinals",
-      title: "Arizona Cardinals • Stream",
-      owner: "BDog (Owner / Coach)",
-      platform: "twitch",
-      channel: "bdog5123",
-      isLive: false
-    },
-    {
-      id: "commanders",
-      title: "Washington Commanders • Stream",
-      owner: "Redskins4life (Owner / Coach)",
-      platform: "twitch",
-      channel: "httr_gaming_18",
-      isLive: false
-    },
-    {
-      id: "texans",
-      title: "Houston Texans • Stream",
-      owner: "HighlyAnti (Owner / Coach)",
-      platform: "twitch",
-      channel: "anticartier",
-      isLive: false
-    },
-    {
-      id: "titans",
-      title: "Tennessee Titans • Stream",
-      owner: "Coach Ocinco (Owner / Coach)",
-      platform: "twitch",
-      channel: "coachocinco",
-      isLive: false
-    },
-    {
-      id: "steelers",
-      title: "Pittsburgh Steelers • Stream",
-      owner: "AlmoneyDMG (Owner / Coach)",
-      platform: "twitch",
-      channel: "almoeydmg",
-      isLive: false
-    },
-    {
-      id: "dolphins",
-      title: "Miami Dolphins • Stream",
-      owner: "CoolCam (Owner / Coach)",
-      platform: "twitch",
-      channel: "coolcam_1324__",
-      isLive: false
-    },
-    {
-      id: "lions",
-      title: "Detroit Lions • Stream",
-      owner: "DaytoDayDavis (Owner / Coach)",
-      platform: "twitch",
-      channel: "fazedarkskin931",
-      isLive: false
-    },
-    {
-      id: "panthers",
-      title: "Carolina Panthers • Stream",
-      owner: "countryswag77 (Owner / Coach)",
-      platform: "twitch",
-      channel: "countryswag77",
-      isLive: false
-    },
-    {
-      id: "vikings",
-      title: "Minnesota Vikings • Stream",
-      owner: "Rod (Owner / Coach)",
-      platform: "twitch",
-      channel: "hotrod55_spf",
-      isLive: false
-    },
-    {
-      id: "cowboys",
-      title: "Dallas Cowboys • Stream",
-      owner: "Jordan (Owner / Coach)",
-      platform: "twitch",
-      channel: "jordannoair",
-      isLive: false
-    },
-    {
-      id: "chargers",
-      title: "Los Angeles Chargers • Stream",
-      owner: "Quailman (Owner / Coach)",
-      platform: "twitch",
-      channel: "quailman1738",
-      isLive: false
-    },
-    {
-      id: "broncos",
-      title: "Denver Broncos • Stream",
-      owner: "Vurm (Owner / Coach)",
-      platform: "twitch",
-      channel: "vurmiciousknid",
-      isLive: false
-    },
-    {
-      id: "49ers",
-      title: "San Francisco 49ers • Stream",
-      owner: "RJ (Owner / Coach)",
-      platform: "twitch",
-      channel: "rjthedesigner",
-      isLive: false
-    },
-    {
-      id: "bengals",
-      title: "Cincinnati Bengals • Stream",
-      owner: "dellis19 (Owner / Coach)",
-      platform: "twitch",
-      channel: "dellis19",
-      isLive: false
-    },
-    {
-      id: "jets",
-      title: "New York Jets • Stream",
-      owner: "YoungMoses (Owner / Coach)",
-      platform: "twitch",
-      channel: "youngmosesgaming",
-      isLive: false
-    },
-    {
-      id: "seahawks",
-      title: "Seattle Seahawks • Stream",
-      owner: "Patrik (Owner / Coach)",
-      platform: "twitch",
-      channel: "sanchez_717",
-      isLive: false
-    },
-    {
-      id: "buccaneers",
-      title: "Tampa Bay Buccaneers • Stream",
-      owner: "Vjackson (Owner / Coach)",
-      platform: "twitch",
-      channel: "beans6613",
-      isLive: false
-    },
-    {
-      id: "falcons",
-      title: "Atlanta Falcons • Stream",
-      owner: "BWO (Owner / Coach)",
-      platform: "twitch",
-      channel: "iambwo4life",
-      isLive: false
-    },
-    {
-      id: "ravens",
-      title: "Baltimore Ravens • Stream",
-      owner: "Tchanka (Owner / Coach)",
-      platform: "twitch",
-      channel: "th30nlyeagle",
-      isLive: false
-    },
-    {
-      id: "browns",
-      title: "Cleveland Browns • Stream",
-      owner: "Mr.Notification (Owner / Coach)",
-      platform: "twitch",
-      channel: "jayydash23",
-      isLive: false
-    },
-    {
-      id: "jaguars",
-      title: "Jacksonville Jaguars • Stream",
-      owner: "Coach Ocinco (Owner / Coach)",
-      platform: "twitch",
-      channel: "coachocinco",
-      isLive: false
-    },
-    {
-      id: "saints",
-      title: "New Orleans Saints • Stream",
-      owner: "AmazingCar (Owner / Coach)",
-      platform: "twitch",
-      channel: "amazingcar678",
-      isLive: false
-    }
-  ],
-
-  // =========================================================
-  // PAST VODs (add YouTube IDs later as you upload them)
-  // =========================================================
-  vods: [
-    // Chronological — older FNSL content first
-    {
-      id: "vod-podcast-ep1a",
-      title: "Podcast EP 1",
-      description: "FNSL Podcast Episode 1",
-      type: "show",
-      season: "",
-      platform: "youtube",
-      videoId: "TkJfcJo0xck",
-      date: "2020-01-01",
-      teams: []
-    },
-    {
-      id: "vod-podcast-ep1b",
-      title: "FNSL Podcast EP 1",
-      description: "FNSL Podcast Episode 1",
-      type: "show",
-      season: "",
-      platform: "youtube",
-      videoId: "kQrBSRkt2Tg",
-      date: "2020-01-02",
-      teams: []
-    },
-    {
-      id: "vod-amari-interview",
-      title: "Amari Post Game Interview",
-      description: "Post-game interview — Made with Clipchamp",
-      type: "interview",
-      season: "",
-      platform: "youtube",
-      videoId: "VM_nIIEH0R4",
-      date: "2020-06-01",
-      teams: []
-    },
-    {
-      id: "vod-podcast-ep3",
-      title: "FNSL Podcast EP 3",
-      description: "FNSL Podcast Episode 3",
-      type: "show",
-      season: "",
-      platform: "youtube",
-      videoId: "kq9PQ7XZCL0",
-      date: "2021-01-01",
-      teams: []
-    },
-    {
-      id: "vod-podcast-ep4",
-      title: "FNSL Podcast EP 4",
-      description: "FNSL Podcast Episode 4",
-      type: "show",
-      season: "",
-      platform: "youtube",
-      videoId: "08VyLP2MZGI",
-      date: "2021-06-01",
-      teams: []
-    },
-    {
-      id: "vod-1",
-      title: "FNSL Stream / Game VOD",
-      description: "Uploaded FNSL content",
-      type: "game",
-      season: "58",
-      platform: "youtube",
-      videoId: "-Uu0btkah3Y",
-      date: "2026-08-19",
-      teams: []
-    }
-  ],
-
-  // =========================================================
-  // TICKER — scores, matchups, announcements (scrolls on bottom)
-  // type: "final" | "live" | "upcoming" | "note"
-  // =========================================================
-  tickerItems: [
-    { type: "note", text: "FNSL Preseason Week 1 — Games on the board" },
-    { type: "upcoming", text: "Colts @ Patriots" },
-    { type: "upcoming", text: "Chargers @ Texans" },
-    { type: "upcoming", text: "Lions @ Bengals" },
-    { type: "upcoming", text: "Cowboys @ Seahawks" },
-    { type: "upcoming", text: "Browns @ Bears" },
-    { type: "upcoming", text: "Panthers @ Bills" },
-    { type: "upcoming", text: "Dolphins @ Commanders" },
-    { type: "upcoming", text: "Packers @ Steelers" },
-    { type: "upcoming", text: "Titans @ 49ers" },
-    { type: "upcoming", text: "Eagles @ Ravens" },
-    { type: "upcoming", text: "Jaguars @ Saints" },
-    { type: "upcoming", text: "Rams @ Chiefs" },
-    { type: "upcoming", text: "Vikings @ Giants" },
-    { type: "upcoming", text: "Buccaneers @ Jets" },
-    { type: "upcoming", text: "Broncos @ Falcons" },
-    { type: "upcoming", text: "Cardinals @ Raiders" },
-    { type: "final", text: "SB LVII Champions: Jacksonville Jaguars (Coach Ocinco)" },
-    { type: "note", text: "Watch live streams on FNSL.TV • Join Discord" },
-  ],
-
-  // =========================================================
-  // LEAGUE LEADERS (slideshow) — update from NeonSportz / stats
-  // =========================================================
-  topPlayers: [
-    { pos: "QB", name: "Update Me", team: "Team", stat: "0 YDS / 0 TD", rank: 1 },
-    { pos: "RB", name: "Update Me", team: "Team", stat: "0 YDS / 0 TD", rank: 1 },
-    { pos: "WR", name: "Update Me", team: "Team", stat: "0 YDS / 0 TD", rank: 1 },
-    { pos: "TE", name: "Update Me", team: "Team", stat: "0 YDS / 0 TD", rank: 1 },
-    { pos: "DEF", name: "Update Me", team: "Team", stat: "0 SACKS", rank: 1 }
-  ],
-
-
-  // =========================================================
-  // LEAGUE HISTORY – All 57 Super Bowls locked in
-  // =========================================================
-  history: [
-    // Madden 19
-    { season: 1,  superBowl: "I",   champion: "Indianapolis Colts",          runnerUp: "", score: "", mvp: "24ADREW", notes: "Madden 19" },
-    { season: 2,  superBowl: "II",  champion: "Washington Football Team",    runnerUp: "", score: "", mvp: "JRH8910", notes: "Madden 19" },
-    { season: 3,  superBowl: "III", champion: "Carolina Panthers",           runnerUp: "", score: "", mvp: "JON", notes: "Madden 19" },
-    { season: 4,  superBowl: "IV",  champion: "Carolina Panthers",           runnerUp: "", score: "", mvp: "", notes: "Madden 19" },
-    { season: 5,  superBowl: "V",   champion: "Jacksonville Jaguars",        runnerUp: "", score: "", mvp: "YOUNGMOSESDMG", notes: "Madden 19" },
-
-    // Madden 20
-    { season: 6,  superBowl: "VI",   champion: "Cleveland Browns",           runnerUp: "", score: "", mvp: "CHUCKESMILES", notes: "Madden 20" },
-    { season: 7,  superBowl: "VII",  champion: "Green Bay Packers",          runnerUp: "", score: "", mvp: "JUDAH BES", notes: "Madden 20" },
-    { season: 8,  superBowl: "VIII", champion: "Miami Dolphins",             runnerUp: "", score: "", mvp: "DEBARGE 313", notes: "Madden 20" },
-    { season: 9,  superBowl: "IX",   champion: "Seattle Seahawks",           runnerUp: "", score: "", mvp: "JACK.FLANIGAN13", notes: "Madden 20" },
-    { season: 10, superBowl: "X",    champion: "Seattle Seahawks",           runnerUp: "", score: "", mvp: "", notes: "Madden 20" },
-    { season: 11, superBowl: "XI",   champion: "Los Angeles Chargers",       runnerUp: "", score: "", mvp: "EATW3LL", notes: "Madden 20" },
-    { season: 12, superBowl: "XII",  champion: "Seattle Seahawks",           runnerUp: "", score: "", mvp: "TWAN ZOOTED", notes: "Madden 20" },
-    { season: 13, superBowl: "XIII", champion: "Philadelphia Eagles",        runnerUp: "", score: "", mvp: "EATW3LL", notes: "Madden 20" },
-
-    // Madden 21
-    { season: 14, superBowl: "XIV",  champion: "Dallas Cowboys",             runnerUp: "", score: "", mvp: "PATS8312", notes: "Madden 21" },
-    { season: 15, superBowl: "XV",   champion: "Carolina Panthers",          runnerUp: "", score: "", mvp: "EATW3LL", notes: "Madden 21" },
-    { season: 16, superBowl: "XVI",  champion: "Arizona Cardinals",          runnerUp: "", score: "", mvp: "COUNTRYSWAG77", notes: "Madden 21" },
-    { season: 17, superBowl: "XVII", champion: "Los Angeles Chargers",       runnerUp: "", score: "", mvp: "BARNEY024", notes: "Madden 21" },
-    { season: 18, superBowl: "XVIII",champion: "Miami Dolphins",             runnerUp: "", score: "", mvp: "IRONMAN170", notes: "Madden 21" },
-    { season: 19, superBowl: "XIX",  champion: "Kansas City Chiefs",         runnerUp: "", score: "", mvp: "EIFVIL", notes: "Madden 21" },
-    { season: 20, superBowl: "XX",   champion: "New England Patriots",       runnerUp: "", score: "", mvp: "SD YOUNG", notes: "Madden 21" },
-    { season: 21, superBowl: "XXI",  champion: "Arizona Cardinals",          runnerUp: "", score: "", mvp: "TR904", notes: "Madden 21" },
-
-    // Madden 22
-    { season: 22, superBowl: "XXII", champion: "Detroit Lions",              runnerUp: "", score: "", mvp: "MrMonarch", notes: "Madden 22" },
-    { season: 23, superBowl: "XXIII",champion: "Kansas City Chiefs",         runnerUp: "", score: "", mvp: "DEllis19", notes: "Madden 22" },
-    { season: 24, superBowl: "XXIV", champion: "Pittsburgh Steelers",        runnerUp: "", score: "", mvp: "COUNTRYSWAG77", notes: "Madden 22" },
-    { season: 25, superBowl: "XXV",  champion: "Minnesota Vikings",          runnerUp: "", score: "", mvp: "COOP", notes: "Madden 22" },
-    { season: 26, superBowl: "XXVI", champion: "Minnesota Vikings",          runnerUp: "", score: "", mvp: "COOP", notes: "Madden 22" },
-    { season: 27, superBowl: "XXVII",champion: "Minnesota Vikings",          runnerUp: "", score: "", mvp: "COOP", notes: "Madden 22" },
-    { season: 28, superBowl: "XXVIII",champion: "Minnesota Vikings",         runnerUp: "", score: "", mvp: "COOP", notes: "Madden 22 – 4-peat" },
-
-    // Madden 23
-    { season: 29, superBowl: "XXIX", champion: "Cincinnati Bengals",         runnerUp: "", score: "", mvp: "BWO", notes: "Madden 23" },
-    { season: 30, superBowl: "XXX",  champion: "Cincinnati Bengals",         runnerUp: "", score: "", mvp: "BWO", notes: "Madden 23" },
-    { season: 31, superBowl: "XXXI", champion: "Jacksonville Jaguars",       runnerUp: "", score: "", mvp: "MR.NOTIFICATION", notes: "Madden 23" },
-    { season: 32, superBowl: "XXXII",champion: "Las Vegas Raiders",          runnerUp: "", score: "", mvp: "SFG WILLIE", notes: "Madden 23" },
-    { season: 33, superBowl: "XXXIII",champion: "New York Jets",             runnerUp: "", score: "", mvp: "PORTLAND STORM", notes: "Madden 23" },
-    { season: 34, superBowl: "XXXIV",champion: "Detroit Lions",              runnerUp: "", score: "", mvp: "BARNEY024", notes: "Madden 23" },
-    { season: 35, superBowl: "XXXV", champion: "Tampa Bay Buccaneers",       runnerUp: "", score: "", mvp: "TAYLORS6G", notes: "Madden 23" },
-    { season: 36, superBowl: "XXXVI",champion: "Chicago Bears",              runnerUp: "", score: "", mvp: "PRIMETIME", notes: "Madden 23" },
-    { season: 37, superBowl: "XXXVII",champion: "Cleveland Browns",          runnerUp: "", score: "", mvp: "COUNTRYSWAG77", notes: "Madden 23" },
-
-    // Madden 24
-    { season: 38, superBowl: "XXXVIII", champion: "Denver Broncos",          runnerUp: "", score: "", mvp: "S-TRADA", notes: "Madden 24" },
-    { season: 39, superBowl: "XXXIX",   champion: "Baltimore Ravens",        runnerUp: "", score: "", mvp: "PRIMETIME", notes: "Madden 24" },
-    { season: 40, superBowl: "XL",      champion: "Atlanta Falcons",         runnerUp: "", score: "", mvp: "BWO", notes: "Madden 24" },
-    { season: 41, superBowl: "XLI",     champion: "Atlanta Falcons",         runnerUp: "", score: "", mvp: "BWO", notes: "Madden 24" },
-    { season: 42, superBowl: "XLII",    champion: "Atlanta Falcons",         runnerUp: "", score: "", mvp: "BWO", notes: "Madden 24 – 3-peat" },
-    { season: 43, superBowl: "XLIII",   champion: "Los Angeles Chargers",    runnerUp: "", score: "", mvp: "COUNTRYSWAG77", notes: "Madden 24" },
-    { season: 44, superBowl: "XLIV",    champion: "Las Vegas Raiders",       runnerUp: "", score: "", mvp: "BARNEY024", notes: "Madden 24" },
-
-    // Madden 25
-    { season: 45, superBowl: "XLV",   champion: "Washington Commanders",     runnerUp: "", score: "", mvp: "SFG WILLIE", notes: "Madden 25" },
-    { season: 46, superBowl: "XLVI",  champion: "Washington Commanders",     runnerUp: "", score: "", mvp: "SFG WILLIE", notes: "Madden 25" },
-    { season: 47, superBowl: "XLVII", champion: "Denver Broncos",            runnerUp: "", score: "", mvp: "MR.NOTIFICATION", notes: "Madden 25" },
-    { season: 48, superBowl: "XLVIII",champion: "Washington Commanders",     runnerUp: "", score: "", mvp: "SFG WILLIE", notes: "Madden 25" },
-    { season: 49, superBowl: "XLIX",  champion: "Seattle Seahawks",          runnerUp: "", score: "", mvp: "COOP", notes: "Madden 25" },
-    { season: 50, superBowl: "L",     champion: "Denver Broncos",            runnerUp: "", score: "", mvp: "MR.NOTIFICATION", notes: "Madden 25" },
-
-    // Madden 26
-    { season: 51, superBowl: "LI",    champion: "New York Giants",           runnerUp: "", score: "", mvp: "SMOKIE", notes: "Madden 26" },
-    { season: 52, superBowl: "LII",   champion: "New York Giants",           runnerUp: "", score: "", mvp: "SMOKIE", notes: "Madden 26" },
-    { season: 53, superBowl: "LIII",  champion: "Baltimore Ravens",          runnerUp: "", score: "", mvp: "BWO", notes: "Madden 26" },
-    { season: 54, superBowl: "LIV",   champion: "San Francisco 49ers",       runnerUp: "", score: "", mvp: "SFG WILLIE", notes: "Madden 26" },
-    { season: 55, superBowl: "LV",    champion: "Detroit Lions",             runnerUp: "", score: "", mvp: "PRIMETIME", notes: "Madden 26" },
-    { season: 56, superBowl: "LVI",   champion: "Las Vegas Raiders",         runnerUp: "", score: "", mvp: "MR.NOTIFICATION", notes: "Madden 26" },
-    { season: 57, superBowl: "LVII",  champion: "Jacksonville Jaguars",      runnerUp: "", score: "", mvp: "COACH OCINCO", notes: "Madden 26 – Current defending champions" }
-  ],
-
-  // =========================================================
-  // STANDINGS (update weekly)
-  // =========================================================
-  standings: {
-    afc: [
-      { team: "Buffalo Bills", record: "16-1", owner: "" },
-      { team: "Jacksonville Jaguars", record: "14-3", owner: "Coach Ocinco" },
-      { team: "New York Jets", record: "13-4", owner: "YoungMoses" },
-      { team: "Indianapolis Colts", record: "13-4", owner: "Willie" },
-      { team: "Denver Broncos", record: "12-5", owner: "Vurm" },
-      { team: "Cincinnati Bengals", record: "10-7", owner: "dellis19" },
-      { team: "New England Patriots", record: "8-9", owner: "Primetime" },
-      { team: "Pittsburgh Steelers", record: "8-9", owner: "AlmoneyDMG" },
-      { team: "Houston Texans", record: "6-11", owner: "HighlyAnti" },
-      { team: "Cleveland Browns", record: "6-11", owner: "Mr.Notification" },
-      { team: "Kansas City Chiefs", record: "6-11", owner: "tr904" },
-      { team: "Los Angeles Chargers", record: "5-12", owner: "Quailman" },
-      { team: "Las Vegas Raiders", record: "3-14", owner: "Dustin" },
-      { team: "Tennessee Titans", record: "1-16", owner: "Coach Ocinco" },
-      { team: "Miami Dolphins", record: "1-16", owner: "CoolCam" },
-      { team: "Baltimore Ravens", record: "1-16", owner: "Tchanka" },
-    ],
-    nfc: [
-      { team: "Atlanta Falcons", record: "17-0", owner: "BWO" },
-      { team: "Seattle Seahawks", record: "16-1", owner: "Patrik" },
-      { team: "New York Giants", record: "15-2", owner: "Smokie" },
-      { team: "Detroit Lions", record: "13-4", owner: "DaytoDayDavis" },
-      { team: "Arizona Cardinals", record: "11-6", owner: "BDog" },
-      { team: "Chicago Bears", record: "11-6", owner: "Keezy" },
-      { team: "Green Bay Packers", record: "10-7", owner: "COOP" },
-      { team: "Los Angeles Rams", record: "10-7", owner: "Jay B" },
-      { team: "Carolina Panthers", record: "10-7", owner: "countryswag77" },
-      { team: "Tampa Bay Buccaneers", record: "9-8", owner: "Vjackson" },
-      { team: "Philadelphia Eagles", record: "9-8", owner: "Stu" },
-      { team: "Washington Commanders", record: "7-10", owner: "Redskins4life" },
-      { team: "San Francisco 49ers", record: "3-14", owner: "RJ" },
-      { team: "Dallas Cowboys", record: "3-14", owner: "Jordan" },
-      { team: "Minnesota Vikings", record: "3-14", owner: "Rod" },
-      { team: "New Orleans Saints", record: "2-15", owner: "AmazingCar" },
-    ]
+// ---------- INIT ----------
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof FNSL_CONFIG === 'undefined') {
+    console.error('[FNSL] data.js failed to load — FNSL_CONFIG missing');
+    const st = document.getElementById('live-status-text');
+    if (st) st.textContent = 'Config error: data.js did not load. Re-upload data.js from the zip.';
+    return;
   }
+
+  applyConfig();
+  renderVods();
+  renderHistory();
+  renderStandings();
+  showSection('live');
+  setupKeyboardNav();
+
+  // Always paint stream cards first (offline ok), then try live detect
+  renderLiveStreams();
+  checkLiveStreams();
+
+  // Re-check every 60 seconds
+  setInterval(checkLiveStreams, 60 * 1000);
+});
+
+// ---------- CONFIG APPLY ----------
+function applyConfig() {
+  const cycleEl = document.getElementById('cycle-season');
+  if (cycleEl) cycleEl.textContent = FNSL_CONFIG.cycleSeason || 'M27 - S1';
+  const seasonEl = document.getElementById('current-season');
+  if (seasonEl) seasonEl.textContent = FNSL_CONFIG.currentSeason || 'Season ?';
+  const champEl = document.getElementById('defending-champ');
+  if (champEl) champEl.textContent = FNSL_CONFIG.defendingChamp || '—';
+  const coachEl = document.getElementById('defending-coach');
+  if (coachEl) coachEl.textContent = FNSL_CONFIG.defendingCoach || '';
+
+
+  // Champ team logo
+  const champLogo = document.getElementById('champ-logo');
+  if (champLogo && FNSL_CONFIG.defendingChamp) {
+    const name = FNSL_CONFIG.defendingChamp.toLowerCase();
+    const abbrMap = {
+      'jacksonville jaguars': 'jax', 'las vegas raiders': 'lv', 'atlanta falcons': 'atl',
+      'seattle seahawks': 'sea', 'new york giants': 'nyg', 'detroit lions': 'det',
+      'kansas city chiefs': 'kc', 'philadelphia eagles': 'phi', 'green bay packers': 'gb',
+      'dallas cowboys': 'dal', 'san francisco 49ers': 'sf', 'buffalo bills': 'buf',
+      'baltimore ravens': 'bal', 'cincinnati bengals': 'cin', 'miami dolphins': 'mia',
+      'new england patriots': 'ne', 'chicago bears': 'chi', 'minnesota vikings': 'min',
+      'carolina panthers': 'car', 'tampa bay buccaneers': 'tb', 'arizona cardinals': 'ari',
+      'los angeles rams': 'lar', 'los angeles chargers': 'lac', 'denver broncos': 'den',
+      'houston texans': 'hou', 'indianapolis colts': 'ind', 'tennessee titans': 'ten',
+      'pittsburgh steelers': 'pit', 'cleveland browns': 'cle', 'new york jets': 'nyj',
+      'washington commanders': 'wsh', 'washington football team': 'wsh', 'new orleans saints': 'no'
+    };
+    let abbr = null;
+    for (const [key, val] of Object.entries(abbrMap)) {
+      if (name.includes(key) || key.includes(name)) { abbr = val; break; }
+    }
+    // also try matching last word
+    if (!abbr) {
+      const last = name.split(' ').pop();
+      for (const [key, val] of Object.entries(abbrMap)) {
+        if (key.includes(last)) { abbr = val; break; }
+      }
+    }
+    if (abbr) {
+      champLogo.src = `https://a.espncdn.com/i/teamlogos/nfl/500/${abbr}.png`;
+      champLogo.style.display = 'block';
+      champLogo.alt = FNSL_CONFIG.defendingChamp;
+    }
+  }
+
+  startStatsSlideshow();
+  renderSocialLinks();
+  renderTicker();
+}
+
+// ---------- LEAGUE LEADERS SLIDESHOW ----------
+let statsSlideIndex = 0;
+let statsSlideTimer = null;
+
+function startStatsSlideshow() {
+  const container = document.getElementById('stats-slideshow');
+  const dots = document.getElementById('stats-dots');
+  if (!container) return;
+
+  const players = FNSL_CONFIG.topPlayers || [];
+  if (players.length === 0) {
+    container.innerHTML = '<p class="text-slate-400 text-sm">Leaders update after Week 1</p>';
+    return;
+  }
+
+  container.innerHTML = players.map((p, i) => `
+    <div class="stat-slide ${i === 0 ? 'active' : ''}" data-idx="${i}">
+      <div class="flex items-baseline justify-between gap-2">
+        <span class="text-xs font-bold text-purple-300 uppercase">${escapeHtml(p.pos)}</span>
+        <span class="text-xs text-slate-500">#${p.rank || 1}</span>
+      </div>
+      <p class="font-bold text-lg leading-tight mt-1">${escapeHtml(p.name)}</p>
+      <p class="text-slate-400 text-sm">${escapeHtml(p.team)} · ${escapeHtml(p.stat)}</p>
+    </div>
+  `).join('');
+
+  if (dots) {
+    dots.innerHTML = players.map((_, i) =>
+      `<button class="w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-purple-400' : 'bg-slate-600'} stats-dot" data-idx="${i}" aria-label="Slide ${i+1}"></button>`
+    ).join('');
+    dots.querySelectorAll('.stats-dot').forEach(btn => {
+      btn.addEventListener('click', () => {
+        statsSlideIndex = parseInt(btn.dataset.idx, 10);
+        showStatsSlide(statsSlideIndex);
+        resetStatsTimer();
+      });
+    });
+  }
+
+  resetStatsTimer();
+}
+
+function showStatsSlide(idx) {
+  const slides = document.querySelectorAll('.stat-slide');
+  const dots = document.querySelectorAll('.stats-dot');
+  if (!slides.length) return;
+  statsSlideIndex = ((idx % slides.length) + slides.length) % slides.length;
+  slides.forEach((s, i) => s.classList.toggle('active', i === statsSlideIndex));
+  dots.forEach((d, i) => {
+    d.classList.toggle('bg-purple-400', i === statsSlideIndex);
+    d.classList.toggle('bg-slate-600', i !== statsSlideIndex);
+  });
+}
+
+function resetStatsTimer() {
+  if (statsSlideTimer) clearInterval(statsSlideTimer);
+  statsSlideTimer = setInterval(() => {
+    showStatsSlide(statsSlideIndex + 1);
+  }, 4000);
+}
+
+// ---------- NAVIGATION ----------
+function showSection(name) {
+  currentSection = name;
+  document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+  const el = document.getElementById('section-' + name);
+  if (el) el.classList.remove('hidden');
+
+  document.querySelectorAll('.nav-btn[data-section]').forEach(btn => {
+    if (btn.dataset.section === name) {
+      btn.classList.add('bg-green-600/20', 'text-green-400');
+    } else {
+      btn.classList.remove('bg-green-600/20', 'text-green-400');
+    }
+  });
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ---------- AUTOMATIC LIVE CHECK ----------
+async function checkLiveStreams() {
+  const channels = (FNSL_CONFIG.twitchChannels || [])
+    .map(c => c.trim().toLowerCase())
+    .filter(Boolean);
+
+  (FNSL_CONFIG.featuredStreams || []).forEach(s => {
+    if (s.channel && s.platform === 'twitch') {
+      const name = s.channel.trim().toLowerCase();
+      if (name && !channels.includes(name)) channels.push(name);
+    }
+  });
+
+  if (channels.length === 0) {
+    renderLiveStreams();
+    return;
+  }
+
+  const statusText = document.getElementById('live-status-text');
+  if (statusText) statusText.textContent = 'Checking who is live…';
+
+  try {
+    const url = `/api/live?channels=${encodeURIComponent(channels.join(','))}`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    const data = await res.json();
+
+    if (data.ok && Array.isArray(data.live)) {
+      liveStatusCache = {};
+      data.live.forEach(s => {
+        const login = (s.login || '').toLowerCase();
+        if (login) liveStatusCache[login] = s;
+      });
+      liveApiOk = true;
+      lastLiveCheck = Date.now();
+      console.log('[FNSL] Live check OK:', data.live.length, 'live of', data.checked, 'checked', data.live);
+    } else {
+      // Do NOT wipe cache / force offline on API errors
+      liveApiOk = false;
+      console.warn('[FNSL] Live API not ok:', data.error || data);
+      if (statusText) {
+        statusText.textContent = 'No one is live right now — auto-detect will turn on when Twitch is configured';
+      }
+    }
+
+    renderLiveStreams();
+  } catch (err) {
+    liveApiOk = false;
+    console.warn('[FNSL] Live check failed:', err);
+    const statusText2 = document.getElementById('live-status-text');
+    if (statusText2) statusText2.textContent = 'No one is live right now — check VODs or come back later';
+    renderLiveStreams();
+  }
+}
+
+// ---------- LIVE STREAMS ----------
+function renderLiveStreams() {
+  const container = document.getElementById('live-streams');
+  const noLive = document.getElementById('no-live');
+  const statusText = document.getElementById('live-status-text');
+
+  container.innerHTML = '';
+
+  // Build the list of streams to show
+  let streams = [...(FNSL_CONFIG.featuredStreams || [])];
+
+  // Apply automatic live status (only override when API succeeded)
+  streams = streams.map(s => {
+    const channel = (s.channel || '').trim().toLowerCase();
+    const liveInfo = channel ? liveStatusCache[channel] : null;
+
+    if (liveInfo) {
+      return {
+        ...s,
+        isLive: true,
+        title: liveInfo.title || s.title,
+        viewerCount: liveInfo.viewerCount,
+        thumbnail: liveInfo.thumbnail || s.thumbnail,
+        startedAt: liveInfo.startedAt
+      };
+    }
+
+    if (liveApiOk && channel) {
+      return { ...s, isLive: false };
+    }
+    return s;
+  });
+
+  // Also add any live channels that were in twitchChannels but not in featuredStreams
+  Object.values(liveStatusCache).forEach(liveInfo => {
+    const already = streams.some(s => (s.channel || '').toLowerCase() === liveInfo.login.toLowerCase());
+    if (!already) {
+      streams.push({
+        id: liveInfo.login,
+        title: liveInfo.title || `${liveInfo.displayName} is live`,
+        owner: liveInfo.displayName,
+        platform: 'twitch',
+        channel: liveInfo.login,
+        isLive: true,
+        viewerCount: liveInfo.viewerCount,
+        thumbnail: liveInfo.thumbnail
+      });
+    }
+  });
+
+  const liveOnes = streams.filter(s => s.isLive);
+  const offlineOnes = streams.filter(s => !s.isLive);
+
+  if (liveOnes.length === 0 && offlineOnes.length === 0) {
+    noLive.classList.remove('hidden');
+    statusText.textContent = 'No streams configured yet — add usernames in data.js';
+    updateLiveBadge(0);
+    return;
+  }
+
+  noLive.classList.add('hidden');
+
+  // Show live first
+  [...liveOnes, ...offlineOnes].forEach(stream => {
+    container.appendChild(createStreamCard(stream));
+  });
+
+  if (liveOnes.length > 0) {
+    statusText.textContent = `${liveOnes.length} stream${liveOnes.length > 1 ? 's' : ''} live right now`;
+  } else if (liveApiOk) {
+    statusText.textContent = 'No one is live — check VODs or come back later';
+  } else {
+    // Keep a friendly message; technical Twitch errors stay in the console
+    statusText.textContent = 'No one is live right now — streams will light up when someone goes live';
+  }
+
+  updateLiveBadge(liveOnes.length);
+}
+
+// NFL team logo lookup (ESPN CDN)
+const TEAM_LOGO_ABBR = {
+  raiders: 'lv', packers: 'gb', bears: 'chi', giants: 'nyg', eagles: 'phi',
+  patriots: 'ne', colts: 'ind', rams: 'lar', chiefs: 'kc', cardinals: 'ari',
+  commanders: 'wsh', texans: 'hou', titans: 'ten', steelers: 'pit', dolphins: 'mia',
+  lions: 'det', panthers: 'car', vikings: 'min', cowboys: 'dal', chargers: 'lac',
+  broncos: 'den', '49ers': 'sf', bengals: 'cin', jets: 'nyj', seahawks: 'sea',
+  buccaneers: 'tb', falcons: 'atl', ravens: 'bal', browns: 'cle', jaguars: 'jax',
+  bills: 'buf', saints: 'no'
 };
 
-// Helper: compute titles count from history
-function getTitleCounts() {
-  const counts = {};
-  FNSL_CONFIG.history.forEach(h => {
-    counts[h.champion] = (counts[h.champion] || 0) + 1;
+function getTeamLogoUrl(stream) {
+  const id = (stream.id || '').toLowerCase();
+  const abbr = TEAM_LOGO_ABBR[id];
+  if (abbr) return `https://a.espncdn.com/i/teamlogos/nfl/500/${abbr}.png`;
+  const title = (stream.title || '').toLowerCase();
+  for (const [key, val] of Object.entries(TEAM_LOGO_ABBR)) {
+    if (title.includes(key)) {
+      return `https://a.espncdn.com/i/teamlogos/nfl/500/${val}.png`;
+    }
+  }
+  return null;
+}
+
+function createStreamCard(stream) {
+  const card = document.createElement('div');
+  card.className = 'stream-card tv-card rounded-2xl bg-fnsl-card border border-slate-800 overflow-hidden cursor-pointer group focus:outline-none';
+  card.tabIndex = 0;
+  card.setAttribute('role', 'button');
+
+  const isLive = stream.isLive;
+  const viewers = stream.viewerCount ? `${stream.viewerCount} watching` : '';
+  const logoUrl = getTeamLogoUrl(stream);
+  // Live preview from Twitch (updates while streaming)
+  const previewUrl = (isLive && stream.channel)
+    ? `https://static-cdn.jtvnw.net/previews-ttv/live_user_${encodeURIComponent(stream.channel.toLowerCase())}-640x360.jpg?t=${Date.now()}`
+    : null;
+
+  card.innerHTML = `
+    <div class="relative aspect-video bg-slate-900 overflow-hidden">
+      ${isLive ? `
+        <div class="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-600 text-xs font-bold uppercase tracking-wide shadow">
+          <span class="w-1.5 h-1.5 rounded-full bg-white live-dot"></span> LIVE
+        </div>
+      ` : `
+        <div class="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-md bg-slate-700/90 text-xs font-medium">
+          Offline
+        </div>
+      `}
+      <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900">
+        ${previewUrl
+          ? `<img src="${previewUrl}" alt="Live preview" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerHTML='${logoUrl ? `<img src=\'${logoUrl}\' class=\'w-20 h-20 object-contain\' />` : '🔴'}';" />`
+          : (logoUrl
+            ? `<img src="${logoUrl}" alt="" class="w-20 h-20 object-contain opacity-90 group-hover:scale-110 transition duration-300" onerror="this.style.display='none'" />`
+            : `<span class="text-4xl">📺</span>`)}
+      </div>
+      <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition flex items-center justify-center">
+        <div class="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center shadow-xl">
+          <svg class="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/></svg>
+        </div>
+      </div>
+    </div>
+    <div class="p-4">
+      <h3 class="font-bold text-lg leading-tight line-clamp-2">${escapeHtml(stream.title || 'Untitled Stream')}</h3>
+      <p class="text-slate-400 text-sm mt-1">${escapeHtml(stream.owner || stream.channel || '')}</p>
+      <div class="flex items-center justify-between mt-3 text-xs text-slate-500">
+        <div class="flex items-center gap-2">
+          ${logoUrl ? `<img src="${logoUrl}" alt="" class="w-6 h-6 object-contain" onerror="this.style.display='none'" />` : ''}
+          <span class="uppercase tracking-wide">${stream.platform || 'stream'}</span>
+        </div>
+        <span>${viewers}</span>
+      </div>
+    </div>
+  `;
+
+  card.addEventListener('click', () => openStream(stream));
+  card.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openStream(stream);
+    }
   });
-  return Object.entries(counts)
-    .sort((a, b) => b[1] - a[1])
-    .map(([team, titles]) => ({ team, titles }));
+
+  return card;
+}
+
+function openStream(stream) {
+  const overlay = document.getElementById('player-overlay');
+  const container = document.getElementById('player-container');
+  const title = document.getElementById('player-title');
+  const openLink = document.getElementById('player-open-link');
+
+  title.textContent = stream.title || 'Stream';
+
+  // Twitch requires every domain that embeds the player as parent=
+  const host = window.location.hostname || 'localhost';
+  const parents = Array.from(new Set([
+    host,
+    host.replace(/^www\./, ''),
+    'localhost',
+    'fnsl-tv.vercel.app'
+  ])).filter(Boolean);
+  const parentParams = parents.map(p => `parent=${encodeURIComponent(p)}`).join('&');
+
+  let embed = '';
+  let externalUrl = '';
+
+  if (stream.platform === 'twitch' && stream.channel) {
+    const ch = stream.channel.trim();
+    externalUrl = `https://www.twitch.tv/${encodeURIComponent(ch)}`;
+    embed = `<iframe
+      src="https://player.twitch.tv/?channel=${encodeURIComponent(ch)}&${parentParams}&autoplay=true&muted=false"
+      allowfullscreen
+      allow="autoplay; fullscreen"
+      class="w-full h-full"
+      style="border:none; position:absolute; inset:0; width:100%; height:100%;">
+    </iframe>`;
+  } else if (stream.platform === 'youtube' && stream.videoId) {
+    externalUrl = `https://www.youtube.com/watch?v=${encodeURIComponent(stream.videoId)}`;
+    embed = `<iframe
+      src="https://www.youtube.com/embed/${encodeURIComponent(stream.videoId)}?autoplay=1"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+      allowfullscreen
+      class="w-full h-full"
+      style="border:none; position:absolute; inset:0; width:100%; height:100%;">
+    </iframe>`;
+  } else if (stream.url) {
+    window.open(stream.url, '_blank');
+    return;
+  } else {
+    embed = `<div class="text-center p-12 text-slate-400">
+      <p class="text-xl mb-2">No embed available</p>
+      <p>Add a Twitch channel or YouTube video ID in data.js</p>
+    </div>`;
+  }
+
+  container.innerHTML = embed;
+  if (openLink) {
+    if (externalUrl) {
+      openLink.href = externalUrl;
+      openLink.classList.remove('hidden');
+    } else {
+      openLink.classList.add('hidden');
+    }
+  }
+  overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePlayer() {
+  const overlay = document.getElementById('player-overlay');
+  const container = document.getElementById('player-container');
+  overlay.classList.remove('active');
+  container.innerHTML = '';
+  document.body.style.overflow = '';
+}
+
+function playAllLive() {
+  const live = (FNSL_CONFIG.featuredStreams || []).filter(s => {
+    const channel = (s.channel || '').toLowerCase();
+    return s.isLive || liveStatusCache[channel];
+  });
+
+  // Also include pure auto-detected ones
+  const autoLive = Object.values(liveStatusCache).map(l => ({
+    channel: l.login,
+    title: l.title,
+    platform: 'twitch',
+    isLive: true
+  }));
+
+  const allLive = [...live, ...autoLive];
+  if (allLive.length === 0) {
+    alert('No live streams right now.');
+    return;
+  }
+  openStream(allLive[0]);
+}
+
+function refreshStreams() {
+  checkLiveStreams();
+}
+
+function updateLiveBadge(count) {
+  const badge = document.getElementById('live-badge');
+  const countEl = document.getElementById('live-count');
+  if (count > 0) {
+    badge.classList.remove('hidden');
+    badge.classList.add('flex');
+    countEl.textContent = `${count} LIVE`;
+  } else {
+    badge.classList.add('hidden');
+    badge.classList.remove('flex');
+  }
+}
+
+// ---------- VODS ----------
+function renderVods() {
+  // Chronological (oldest first)
+  filteredVods = [...(FNSL_CONFIG.vods || [])].sort((a, b) =>
+    String(a.date || '').localeCompare(String(b.date || ''))
+  );
+  filterVods();
+}
+
+function filterVods() {
+  const search = (document.getElementById('vod-search')?.value || '').toLowerCase();
+  const type = document.getElementById('vod-filter')?.value || 'all';
+
+  filteredVods = (FNSL_CONFIG.vods || []).filter(v => {
+    const matchesType = type === 'all' || v.type === type;
+    const matchesSearch = !search ||
+      (v.title || '').toLowerCase().includes(search) ||
+      (v.description || '').toLowerCase().includes(search) ||
+      (v.teams || []).join(' ').toLowerCase().includes(search) ||
+      (v.season || '').toString().includes(search);
+    return matchesType && matchesSearch;
+  }).sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
+
+  const grid = document.getElementById('vod-grid');
+  grid.innerHTML = '';
+
+  if (filteredVods.length === 0) {
+    grid.innerHTML = `
+      <div class="col-span-full text-center py-16 text-slate-400">
+        <p class="text-xl mb-2">No VODs match your filters</p>
+        <p class="text-sm">Add past streams in data.js → vods array</p>
+      </div>`;
+    return;
+  }
+
+  filteredVods.forEach(vod => {
+    const card = document.createElement('div');
+    card.className = 'stream-card tv-card rounded-2xl bg-fnsl-card border border-slate-800 overflow-hidden cursor-pointer group';
+    card.tabIndex = 0;
+
+    const typeBadge = {
+      game: 'bg-blue-600/30 text-blue-300',
+      draft: 'bg-purple-600/30 text-purple-300',
+      show: 'bg-amber-600/30 text-amber-300',
+      superbowl: 'bg-yellow-500/20 text-yellow-300'
+    }[vod.type] || 'bg-slate-700 text-slate-300';
+
+    card.innerHTML = `
+      <div class="relative aspect-video bg-slate-900 flex items-center justify-center text-4xl">
+        📼
+        <div class="absolute top-3 left-3 px-2 py-0.5 rounded text-xs font-bold uppercase ${typeBadge}">
+          ${vod.type || 'vod'}
+        </div>
+      </div>
+      <div class="p-4">
+        <h3 class="font-bold text-lg leading-tight">${escapeHtml(vod.title)}</h3>
+        <p class="text-slate-400 text-sm mt-1 line-clamp-2">${escapeHtml(vod.description || '')}</p>
+        <div class="flex items-center justify-between mt-3 text-xs text-slate-500">
+          <span>Season ${vod.season || '?'}</span>
+          <span>${vod.date || ''}</span>
+        </div>
+      </div>
+    `;
+
+    card.addEventListener('click', () => openVod(vod));
+    card.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openVod(vod);
+      }
+    });
+
+    grid.appendChild(card);
+  });
+}
+
+function openVod(vod) {
+  if (vod.platform === 'youtube' && vod.videoId) {
+    openStream({
+      title: vod.title,
+      platform: 'youtube',
+      videoId: vod.videoId
+    });
+  } else if (vod.url) {
+    window.open(vod.url, '_blank');
+  } else {
+    alert('Add a YouTube videoId or url for this VOD in data.js');
+  }
+}
+
+// ---------- HISTORY ----------
+function renderHistory() {
+  const tbody = document.getElementById('history-tbody');
+  tbody.innerHTML = '';
+
+  const history = [...(FNSL_CONFIG.history || [])].sort((a, b) => b.season - a.season);
+
+  if (history.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="px-5 py-12 text-center text-slate-400">
+          No championship history yet.<br>
+          <span class="text-sm">Add entries to FNSL_CONFIG.history in data.js</span>
+        </td>
+      </tr>`;
+  } else {
+    history.forEach(h => {
+      const tr = document.createElement('tr');
+      tr.className = 'hover:bg-slate-800/50 transition';
+      tr.innerHTML = `
+        <td class="px-5 py-4 font-medium">${h.season}</td>
+        <td class="px-5 py-4 text-amber-400 font-bold">SB ${h.superBowl || h.season}</td>
+        <td class="px-5 py-4 font-bold text-green-400">${escapeHtml(h.champion)}</td>
+        <td class="px-5 py-4 text-slate-300">${escapeHtml(h.runnerUp || '—')}</td>
+        <td class="px-5 py-4 font-mono">${escapeHtml(h.score || '—')}</td>
+        <td class="px-5 py-4 text-sm text-slate-400">${escapeHtml(h.mvp || h.notes || '')}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  const leaderboard = document.getElementById('titles-leaderboard');
+  leaderboard.innerHTML = '';
+  const titles = getTitleCounts();
+
+  if (titles.length === 0) {
+    leaderboard.innerHTML = `<p class="col-span-full text-slate-400">Add champions to see the all-time leaderboard.</p>`;
+  } else {
+    titles.forEach(({ team, titles: count }, i) => {
+      const card = document.createElement('div');
+      card.className = 'tv-card rounded-xl bg-fnsl-card border border-slate-800 p-4 text-center';
+      card.innerHTML = `
+        <div class="text-3xl font-black ${i === 0 ? 'text-amber-400' : 'text-slate-200'}">${count}</div>
+        <div class="text-sm font-medium mt-1 leading-tight">${escapeHtml(team)}</div>
+        <div class="text-xs text-slate-500 mt-1">${count === 1 ? 'title' : 'titles'}</div>
+      `;
+      leaderboard.appendChild(card);
+    });
+  }
+}
+
+
+// ---------- STANDINGS ----------
+function renderStandings() {
+  renderConf('afc', FNSL_CONFIG.standings?.afc || []);
+  renderConf('nfc', FNSL_CONFIG.standings?.nfc || []);
+}
+
+function renderConf(conf, teams) {
+  const container = document.getElementById('standings-' + conf);
+  container.innerHTML = '';
+
+  if (teams.length === 0) {
+    container.innerHTML = `<div class="px-5 py-8 text-center text-slate-400 text-sm">Add teams in data.js</div>`;
+    return;
+  }
+
+  const sorted = [...teams].sort((a, b) => {
+    const [aw] = (a.record || '0-0').split('-').map(Number);
+    const [bw] = (b.record || '0-0').split('-').map(Number);
+    return bw - aw;
+  });
+
+  sorted.forEach((t, i) => {
+    const row = document.createElement('div');
+    row.className = 'flex items-center justify-between px-5 py-3 hover:bg-slate-800/40';
+    row.innerHTML = `
+      <div class="flex items-center gap-3">
+        <span class="text-slate-500 text-sm w-5">${i + 1}</span>
+        <div>
+          <div class="font-semibold">${escapeHtml(t.team)}</div>
+          ${t.owner ? `<div class="text-xs text-slate-500">${escapeHtml(t.owner)}</div>` : ''}
+        </div>
+      </div>
+      <div class="font-mono font-bold text-lg">${escapeHtml(t.record || '0-0')}</div>
+    `;
+    container.appendChild(row);
+  });
+}
+
+// ---------- TV / KEYBOARD NAV ----------
+function setupKeyboardNav() {
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closePlayer();
+    if (e.key === '1') showSection('live');
+    if (e.key === '2') showSection('vods');
+    if (e.key === '3') showSection('history');
+    if (e.key === '4') showSection('standings');
+  });
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+// ---------- UTILS ----------
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// Expose for inline handlers
+window.showSection = showSection;
+window.playAllLive = playAllLive;
+window.refreshStreams = refreshStreams;
+window.filterVods = filterVods;
+window.closePlayer = closePlayer;
+window.toggleFullscreen = toggleFullscreen;
+window.openStream = openStream;
+window.checkLiveStreams = checkLiveStreams;
+
+// ---------- SOCIAL LINKS ----------
+const SOCIAL_ICONS = {
+  discord: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>`,
+  youtube: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>`,
+  x: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,
+  twitch: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>`,
+  neonsportz: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L3 7v10l9 5 9-5V7l-9-5zm0 2.2l6.5 3.6v7.4L12 18.8 5.5 15.2V7.8L12 4.2zM8 10h2v6H8v-6zm3 2h2v4h-2v-4zm3-1h2v5h-2v-5z"/></svg>`
+};
+
+function renderSocialLinks() {
+  const links = (FNSL_CONFIG.socialLinks || []).filter(l => l.url && l.url.trim() !== '');
+  const html = links.map(l => {
+    const icon = SOCIAL_ICONS[l.id] || '';
+    const color = l.color || '#94a3b8';
+    return `<a class="social-btn" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer" style="color:${color}" title="${escapeHtml(l.label)}">
+      ${icon}<span>${escapeHtml(l.label)}</span>
+    </a>`;
+  }).join('');
+
+  const top = document.getElementById('social-links');
+  const foot = document.getElementById('social-links-footer');
+  if (top) top.innerHTML = html;
+  if (foot) foot.innerHTML = html;
+}
+
+
+// ---------- SCORE / MATCHUP TICKER ----------
+function renderTicker() {
+  const el = document.getElementById('ticker-content');
+  if (!el) return;
+
+  const items = FNSL_CONFIG.tickerItems || [];
+  if (items.length === 0) {
+    el.innerHTML = '<span class="ticker-item">FNSL — No updates yet</span>';
+    return;
+  }
+
+  // Duplicate content so the loop scrolls seamlessly
+  const html = items.map(item => {
+    const cls = item.type === 'live' ? 'live-item'
+      : item.type === 'final' ? 'final-item'
+      : '';
+    const prefix = item.type === 'live' ? '● LIVE '
+      : item.type === 'final' ? 'FINAL '
+      : item.type === 'upcoming' ? 'UPCOMING '
+      : '';
+    return `<span class="ticker-item ${cls}">${prefix}${escapeHtml(item.text)}</span><span class="sep">◆</span>`;
+  }).join('');
+
+  el.innerHTML = html + html;
 }

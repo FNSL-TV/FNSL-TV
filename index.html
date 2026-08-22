@@ -1,572 +1,578 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#0a0a0f" />
-  <meta name="description" content="FNSL TV - Father N Son League streaming, history, and VODs. The ultimate Madden franchise league experience." />
-  <title>FNSL TV • Father N Son League • No one is bigger than the shield</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            fnsl: {
-              bg: '#0a0a0f',
-              card: '#12121a',
-              accent: '#22c55e',
-              accent2: '#3b82f6',
-              gold: '#fbbf24',
-              muted: '#94a3b8'
-            }
-          },
-          fontFamily: {
-            display: ['Inter', 'system-ui', 'sans-serif'],
-          }
-        }
-      }
-    }
-  </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; }
-    html, body {
-      height: 100%;
-      background: #0a0a0f;
-      color: #e2e8f0;
-      font-family: 'Inter', system-ui, sans-serif;
-      overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
-    }
-    /* TV-friendly focus styles */
-    :focus-visible {
-      outline: 3px solid #22c55e;
-      outline-offset: 4px;
-    }
-    .tv-card:focus-visible, .nav-btn:focus-visible, .stream-card:focus-visible {
-      transform: scale(1.03);
-      box-shadow: 0 0 0 3px #22c55e, 0 20px 40px rgba(34, 197, 94, 0.15);
-    }
-    .stream-card, .tv-card, .nav-btn, button, a {
-      transition: all 0.2s ease;
-    }
-    /* Smooth scrolling for remote */
-    html { scroll-behavior: smooth; }
-    /* Hide scrollbar but keep functionality */
-    ::-webkit-scrollbar { width: 8px; height: 8px; }
-    ::-webkit-scrollbar-track { background: #0a0a0f; }
-    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #22c55e; }
-    /* Live pulse */
-    .live-dot {
-      animation: pulse 1.5s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-    /* Fullscreen player overlay */
-    #player-overlay {
-      display: none;
-    }
-    #player-overlay.active {
-      display: flex;
-    }
-    /* Grid for streams optimized for TV */
-    .streams-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 1.5rem;
-    }
-    @media (min-width: 1920px) {
-      .streams-grid {
-        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-      }
-    }
-    @media (min-width: 1280px) {
-      #section-live .streams-grid {
-        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      }
-    }
-    /* ===== FIELD + FNSL LOGO BACKDROP ===== */
-    #site-backdrop {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      overflow: hidden;
-      background:
-        /* dark top-to-bottom so content stays readable */
-        linear-gradient(180deg, #0a0a0f 0%, rgba(10,14,12,0.92) 35%, rgba(8,18,12,0.88) 65%, #0a0a0f 100%),
-        /* soft green field glow in center */
-        radial-gradient(ellipse 90% 55% at 50% 55%, rgba(22, 101, 52, 0.35) 0%, transparent 70%);
-    }
-    /* Yard lines */
-    #site-backdrop .field-lines {
-      position: absolute;
-      inset: 0;
-      background:
-        repeating-linear-gradient(
-          0deg,
-          transparent 0,
-          transparent 56px,
-          rgba(34, 197, 94, 0.07) 56px,
-          rgba(34, 197, 94, 0.07) 58px
-        ),
-        repeating-linear-gradient(
-          90deg,
-          transparent 0,
-          transparent 120px,
-          rgba(34, 197, 94, 0.04) 120px,
-          rgba(34, 197, 94, 0.04) 121px
-        );
-      mask-image: radial-gradient(ellipse 85% 70% at 50% 50%, black 20%, transparent 75%);
-      opacity: 0.9;
-    }
-    /* Giant logo "painted" on the field */
-    #site-backdrop .field-logo {
-      position: absolute;
-      left: 50%;
-      top: 42%;
-      transform: translate(-50%, -50%);
-      width: min(78vw, 820px);
-      height: auto;
-      opacity: 0.14;
-      filter: grayscale(0.15) brightness(0.85) contrast(1.1);
-      object-fit: contain;
-      user-select: none;
-    }
-    /* Vignette so edges stay dark */
-    #site-backdrop .vignette {
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse 70% 60% at 50% 45%, transparent 0%, rgba(10,10,15,0.55) 100%);
-    }
-    header, main, footer, #player-overlay {
-      position: relative;
-      z-index: 1;
-    }
-    /* Stats slideshow */
-    .stat-slide { display: none; }
-    .stat-slide.active { display: block; animation: fadeIn 0.5s ease; }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .champ-signature {
-      font-family: 'Great Vibes', cursive;
-      font-size: 1.65rem;
-      line-height: 1.1;
-      color: #86efac;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-      margin-top: 0.35rem;
-      transform: rotate(-2deg);
-      display: inline-block;
-    }
-    .social-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.4rem;
-      padding: 0.45rem;
-      border-radius: 0.75rem;
-      background: rgba(18, 18, 26, 0.85);
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      color: #e2e8f0;
-      font-size: 0.8rem;
-      font-weight: 600;
-      transition: all 0.2s ease;
-      text-decoration: none;
-    }
-    .social-btn span { display: none; }
-    @media (min-width: 1024px) {
-      .social-btn { padding: 0.45rem 0.75rem; }
-      .social-btn span { display: inline; }
-    }
-    .social-btn:hover, .social-btn:focus-visible {
-      transform: translateY(-1px);
-      border-color: currentColor;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.35);
-    }
-    .social-btn svg { width: 1.15rem; height: 1.15rem; flex-shrink: 0; }
-    #social-links-footer .social-btn span { display: inline; }
-    #social-links-footer .social-btn { padding: 0.55rem 1rem; border-radius: 9999px; }
-    /* ===== FNSL SCORE TICKER ===== */
-    #fnsl-ticker {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 40;
-      height: 40px;
-      background: linear-gradient(90deg, #0a0a0f 0%, #12121a 15%, #12121a 85%, #0a0a0f 100%);
-      border-top: 1px solid rgba(34, 197, 94, 0.35);
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-    }
-    @media (max-width: 767px) {
-      #fnsl-ticker { bottom: 58px; } /* sit above mobile nav */
-      main { padding-bottom: 7rem !important; }
-    }
-    @media (min-width: 768px) {
-      main { padding-bottom: 4rem !important; }
-      footer { padding-bottom: 3rem; }
-    }
-    #fnsl-ticker .ticker-label {
-      flex-shrink: 0;
-      background: #22c55e;
-      color: #0a0a0f;
-      font-weight: 800;
-      font-size: 0.7rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 0 0.85rem;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      z-index: 2;
-    }
-    #fnsl-ticker .ticker-track {
-      flex: 1;
-      overflow: hidden;
-      white-space: nowrap;
-      position: relative;
-    }
-    #fnsl-ticker .ticker-content {
-      display: inline-block;
-      padding-left: 100%;
-      animation: ticker-scroll 75s linear infinite;
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: #e2e8f0;
-    }
-    #fnsl-ticker .ticker-content:hover {
-      animation-play-state: paused;
-    }
-    #fnsl-ticker .ticker-item {
-      display: inline-block;
-      padding: 0 1.75rem;
-    }
-    #fnsl-ticker .ticker-item .sep {
-      color: #22c55e;
-      margin: 0 0.35rem;
-      opacity: 0.7;
-    }
-    #fnsl-ticker .ticker-item.live-item {
-      color: #f87171;
-    }
-    #fnsl-ticker .ticker-item.final-item {
-      color: #94a3b8;
-    }
-    @keyframes ticker-scroll {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-100%); }
-    }
-  </style>
-</head>
-<body class="bg-fnsl-bg text-slate-100 min-h-screen">
+// ============================================================
+// FNSL TV - CONFIG & DATA  (LOCKED IN - permanent base data)
+// Father N Son League
+// ============================================================
 
-  <!-- Field + FNSL logo backdrop -->
-  <div id="site-backdrop" aria-hidden="true">
-    <div class="field-lines"></div>
-    <img class="field-logo" src="logo.jpg" alt="" />
-    <div class="vignette"></div>
-  </div>
+const FNSL_CONFIG = {
+  leagueName: "Father N Son League",
+  shortName: "FNSL",
+  founded: "2018",
+  cycleSeason: "M27 - S1",      // current Madden cycle (update when new Madden drops)
+  currentSeason: "Season 58",   // lifetime season count (bump after each Super Bowl)
+  defendingChamp: "Jacksonville Jaguars",
+  defendingCoach: "Coach Ocinco",
+
+  // =========================================================
+  // SOCIAL / COMMUNITY LINKS (logo buttons on the site)
+  // Leave url empty ("") to hide that button
+  // =========================================================
+  socialLinks: [
+    {
+      id: "discord",
+      label: "Discord",
+      url: "https://discord.gg/eQ8UDrzyZp",
+      color: "#5865F2"
+    },
+    {
+      id: "youtube",
+      label: "YouTube",
+      url: "https://www.youtube.com/@fnslmadden",
+      color: "#FF0000"
+    },
+    {
+      id: "x",
+      label: "X",
+      url: "https://x.com/FNSLMadden",
+      color: "#e7e9ea"
+    },
+    {
+      id: "neonsportz",
+      label: "NeonSportz",
+      url: "https://neonsportz.com/leagues/FNSL",
+      color: "#22c55e"
+    }
+  ],
+
+  // =========================================================
+  // AUTOMATIC LIVE DETECTION
+  // =========================================================
+  twitchChannels: [
+    "fnsldu5t1n812",
+    "cooprelax",
+    "tvkeez",
+    "mr_smokie",
+    "stu07172008",
+    "primestudio1",
+    "fearcloakk",
+    "jay_biebz",
+    "tr904",
+    "bdog5123",
+    "httr_gaming_18",
+    "anticartier",
+    "coachocinco",
+    "almoeydmg",
+    "coolcam_1324__",
+    "fazedarkskin931",
+    "countryswag77",
+    "hotrod55_spf",
+    "jordannoair",
+    "quailman1738",
+    "vurmiciousknid",
+    "rjthedesigner",
+    "dellis19",
+    "youngmosesgaming",
+    "sanchez_717",
+    "beans6613",
+    "iambwo4life",
+    "th30nlyeagle",
+    "jayydash23",
+    "bignewff",
+    "amazingcar678"
+  ],
+
+  // =========================================================
+  // FEATURED STREAMS (all teams)
+  // =========================================================
+  featuredStreams: [
+    {
+      id: "raiders",
+      title: "Las Vegas Raiders • Stream",
+      owner: "Dustin (Owner / Coach)",
+      platform: "twitch",
+      channel: "fnsldu5t1n812",
+      isLive: false
+    },
+    {
+      id: "packers",
+      title: "Green Bay Packers • Stream",
+      owner: "COOP (Owner / Coach)",
+      platform: "twitch",
+      channel: "cooprelax",
+      isLive: false
+    },
+    {
+      id: "bears",
+      title: "Chicago Bears • Stream",
+      owner: "Keezy (Owner / Coach)",
+      platform: "twitch",
+      channel: "tvkeez",
+      isLive: false
+    },
+    {
+      id: "giants",
+      title: "New York Giants • Stream",
+      owner: "Smokie (Owner / Coach)",
+      platform: "twitch",
+      channel: "mr_smokie",
+      isLive: false
+    },
+    {
+      id: "eagles",
+      title: "Philadelphia Eagles • Stream",
+      owner: "Stu (Owner / Coach)",
+      platform: "twitch",
+      channel: "stu07172008",
+      isLive: false
+    },
+    {
+      id: "patriots",
+      title: "New England Patriots • Stream",
+      owner: "Primetime (Owner / Coach)",
+      platform: "twitch",
+      channel: "primestudio1",
+      isLive: false
+    },
+    {
+      id: "colts",
+      title: "Indianapolis Colts • Stream",
+      owner: "Willie (Owner / Coach)",
+      platform: "twitch",
+      channel: "fearcloakk",
+      isLive: false
+    },
+    {
+      id: "rams",
+      title: "Los Angeles Rams • Stream",
+      owner: "Jay B (Owner / Coach)",
+      platform: "twitch",
+      channel: "jay_biebz",
+      isLive: false
+    },
+    {
+      id: "chiefs",
+      title: "Kansas City Chiefs • Stream",
+      owner: "tr904 (Owner / Coach)",
+      platform: "twitch",
+      channel: "tr904",
+      isLive: false
+    },
+    {
+      id: "cardinals",
+      title: "Arizona Cardinals • Stream",
+      owner: "BDog (Owner / Coach)",
+      platform: "twitch",
+      channel: "bdog5123",
+      isLive: false
+    },
+    {
+      id: "commanders",
+      title: "Washington Commanders • Stream",
+      owner: "Redskins4life (Owner / Coach)",
+      platform: "twitch",
+      channel: "httr_gaming_18",
+      isLive: false
+    },
+    {
+      id: "texans",
+      title: "Houston Texans • Stream",
+      owner: "HighlyAnti (Owner / Coach)",
+      platform: "twitch",
+      channel: "anticartier",
+      isLive: false
+    },
+    {
+      id: "titans",
+      title: "Tennessee Titans • Stream",
+      owner: "Coach Ocinco (Owner / Coach)",
+      platform: "twitch",
+      channel: "coachocinco",
+      isLive: false
+    },
+    {
+      id: "steelers",
+      title: "Pittsburgh Steelers • Stream",
+      owner: "AlmoneyDMG (Owner / Coach)",
+      platform: "twitch",
+      channel: "almoeydmg",
+      isLive: false
+    },
+    {
+      id: "dolphins",
+      title: "Miami Dolphins • Stream",
+      owner: "CoolCam (Owner / Coach)",
+      platform: "twitch",
+      channel: "coolcam_1324__",
+      isLive: false
+    },
+    {
+      id: "lions",
+      title: "Detroit Lions • Stream",
+      owner: "DaytoDayDavis (Owner / Coach)",
+      platform: "twitch",
+      channel: "fazedarkskin931",
+      isLive: false
+    },
+    {
+      id: "panthers",
+      title: "Carolina Panthers • Stream",
+      owner: "countryswag77 (Owner / Coach)",
+      platform: "twitch",
+      channel: "countryswag77",
+      isLive: false
+    },
+    {
+      id: "vikings",
+      title: "Minnesota Vikings • Stream",
+      owner: "Rod (Owner / Coach)",
+      platform: "twitch",
+      channel: "hotrod55_spf",
+      isLive: false
+    },
+    {
+      id: "cowboys",
+      title: "Dallas Cowboys • Stream",
+      owner: "Jordan (Owner / Coach)",
+      platform: "twitch",
+      channel: "jordannoair",
+      isLive: false
+    },
+    {
+      id: "chargers",
+      title: "Los Angeles Chargers • Stream",
+      owner: "Quailman (Owner / Coach)",
+      platform: "twitch",
+      channel: "quailman1738",
+      isLive: false
+    },
+    {
+      id: "broncos",
+      title: "Denver Broncos • Stream",
+      owner: "Vurm (Owner / Coach)",
+      platform: "twitch",
+      channel: "vurmiciousknid",
+      isLive: false
+    },
+    {
+      id: "49ers",
+      title: "San Francisco 49ers • Stream",
+      owner: "RJ (Owner / Coach)",
+      platform: "twitch",
+      channel: "rjthedesigner",
+      isLive: false
+    },
+    {
+      id: "bengals",
+      title: "Cincinnati Bengals • Stream",
+      owner: "dellis19 (Owner / Coach)",
+      platform: "twitch",
+      channel: "dellis19",
+      isLive: false
+    },
+    {
+      id: "jets",
+      title: "New York Jets • Stream",
+      owner: "YoungMoses (Owner / Coach)",
+      platform: "twitch",
+      channel: "youngmosesgaming",
+      isLive: false
+    },
+    {
+      id: "seahawks",
+      title: "Seattle Seahawks • Stream",
+      owner: "Patrik (Owner / Coach)",
+      platform: "twitch",
+      channel: "sanchez_717",
+      isLive: false
+    },
+    {
+      id: "buccaneers",
+      title: "Tampa Bay Buccaneers • Stream",
+      owner: "Vjackson (Owner / Coach)",
+      platform: "twitch",
+      channel: "beans6613",
+      isLive: false
+    },
+    {
+      id: "falcons",
+      title: "Atlanta Falcons • Stream",
+      owner: "BWO (Owner / Coach)",
+      platform: "twitch",
+      channel: "iambwo4life",
+      isLive: false
+    },
+    {
+      id: "ravens",
+      title: "Baltimore Ravens • Stream",
+      owner: "Tchanka (Owner / Coach)",
+      platform: "twitch",
+      channel: "th30nlyeagle",
+      isLive: false
+    },
+    {
+      id: "browns",
+      title: "Cleveland Browns • Stream",
+      owner: "Mr.Notification (Owner / Coach)",
+      platform: "twitch",
+      channel: "jayydash23",
+      isLive: false
+    },
+    {
+      id: "jaguars",
+      title: "Jacksonville Jaguars • Stream",
+      owner: "Coach Ocinco (Owner / Coach)",
+      platform: "twitch",
+      channel: "coachocinco",
+      isLive: false
+    },
+    {
+      id: "saints",
+      title: "New Orleans Saints • Stream",
+      owner: "AmazingCar (Owner / Coach)",
+      platform: "twitch",
+      channel: "amazingcar678",
+      isLive: false
+    }
+  ],
+
+  // =========================================================
+  // PAST VODs (add YouTube IDs later as you upload them)
+  // =========================================================
+  vods: [
+    // Chronological — older FNSL content first
+    {
+      id: "vod-podcast-ep1a",
+      title: "Podcast EP 1",
+      description: "FNSL Podcast Episode 1",
+      type: "show",
+      season: "",
+      platform: "youtube",
+      videoId: "TkJfcJo0xck",
+      date: "2020-01-01",
+      teams: []
+    },
+    {
+      id: "vod-podcast-ep1b",
+      title: "FNSL Podcast EP 1",
+      description: "FNSL Podcast Episode 1",
+      type: "show",
+      season: "",
+      platform: "youtube",
+      videoId: "kQrBSRkt2Tg",
+      date: "2020-01-02",
+      teams: []
+    },
+    {
+      id: "vod-amari-interview",
+      title: "Amari Post Game Interview",
+      description: "Post-game interview — Made with Clipchamp",
+      type: "interview",
+      season: "",
+      platform: "youtube",
+      videoId: "VM_nIIEH0R4",
+      date: "2020-06-01",
+      teams: []
+    },
+    {
+      id: "vod-podcast-ep3",
+      title: "FNSL Podcast EP 3",
+      description: "FNSL Podcast Episode 3",
+      type: "show",
+      season: "",
+      platform: "youtube",
+      videoId: "kq9PQ7XZCL0",
+      date: "2021-01-01",
+      teams: []
+    },
+    {
+      id: "vod-podcast-ep4",
+      title: "FNSL Podcast EP 4",
+      description: "FNSL Podcast Episode 4",
+      type: "show",
+      season: "",
+      platform: "youtube",
+      videoId: "08VyLP2MZGI",
+      date: "2021-06-01",
+      teams: []
+    },
+    {
+      id: "vod-1",
+      title: "FNSL Stream / Game VOD",
+      description: "Uploaded FNSL content",
+      type: "game",
+      season: "58",
+      platform: "youtube",
+      videoId: "-Uu0btkah3Y",
+      date: "2026-08-19",
+      teams: []
+    }
+  ],
+
+  // =========================================================
+  // TICKER — scores, matchups, announcements (scrolls on bottom)
+  // type: "final" | "live" | "upcoming" | "note"
+  // =========================================================
+  tickerItems: [
+    { type: "note", text: "FNSL Preseason Week 1 — Games on the board" },
+    { type: "upcoming", text: "Colts @ Patriots" },
+    { type: "upcoming", text: "Chargers @ Texans" },
+    { type: "upcoming", text: "Lions @ Bengals" },
+    { type: "upcoming", text: "Cowboys @ Seahawks" },
+    { type: "upcoming", text: "Browns @ Bears" },
+    { type: "upcoming", text: "Panthers @ Bills" },
+    { type: "upcoming", text: "Dolphins @ Commanders" },
+    { type: "upcoming", text: "Packers @ Steelers" },
+    { type: "upcoming", text: "Titans @ 49ers" },
+    { type: "upcoming", text: "Eagles @ Ravens" },
+    { type: "upcoming", text: "Jaguars @ Saints" },
+    { type: "upcoming", text: "Rams @ Chiefs" },
+    { type: "upcoming", text: "Vikings @ Giants" },
+    { type: "upcoming", text: "Buccaneers @ Jets" },
+    { type: "upcoming", text: "Broncos @ Falcons" },
+    { type: "upcoming", text: "Cardinals @ Raiders" },
+    { type: "final", text: "SB LVII Champions: Jacksonville Jaguars (Coach Ocinco)" },
+    { type: "note", text: "Watch live streams on FNSL.TV • Join Discord" },
+  ],
+
+  // =========================================================
+  // LEAGUE LEADERS (slideshow) — update from NeonSportz / stats
+  // =========================================================
+  topPlayers: [
+    { pos: "QB", name: "Update Me", team: "Team", stat: "0 YDS / 0 TD", rank: 1 },
+    { pos: "RB", name: "Update Me", team: "Team", stat: "0 YDS / 0 TD", rank: 1 },
+    { pos: "WR", name: "Update Me", team: "Team", stat: "0 YDS / 0 TD", rank: 1 },
+    { pos: "TE", name: "Update Me", team: "Team", stat: "0 YDS / 0 TD", rank: 1 },
+    { pos: "DEF", name: "Update Me", team: "Team", stat: "0 SACKS", rank: 1 }
+  ],
 
 
-  <!-- Top Nav -->
-  <header class="sticky top-0 z-50 bg-fnsl-bg/95 backdrop-blur-md border-b border-slate-800">
-    <div class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16 md:h-20 py-2">
-        <div class="flex items-center gap-3">
-          <img src="logo.jpg" alt="FNSL Logo" class="h-12 md:h-14 w-auto object-contain drop-shadow-lg" />
-          <div>
-            <h1 class="text-xl md:text-2xl font-black tracking-tight">FNSL <span class="text-green-400">TV</span></h1>
-            <p class="text-xs text-slate-400 hidden sm:block">Father N Son League • “No one is bigger than the shield”</p>
-          </div>
-        </div>
+  // =========================================================
+  // LEAGUE HISTORY – All 57 Super Bowls locked in
+  // =========================================================
+  history: [
+    // Madden 19
+    { season: 1,  superBowl: "I",   champion: "Indianapolis Colts",          runnerUp: "", score: "", mvp: "24ADREW", notes: "Madden 19" },
+    { season: 2,  superBowl: "II",  champion: "Washington Football Team",    runnerUp: "", score: "", mvp: "JRH8910", notes: "Madden 19" },
+    { season: 3,  superBowl: "III", champion: "Carolina Panthers",           runnerUp: "", score: "", mvp: "JON", notes: "Madden 19" },
+    { season: 4,  superBowl: "IV",  champion: "Carolina Panthers",           runnerUp: "", score: "", mvp: "", notes: "Madden 19" },
+    { season: 5,  superBowl: "V",   champion: "Jacksonville Jaguars",        runnerUp: "", score: "", mvp: "YOUNGMOSESDMG", notes: "Madden 19" },
 
-        <nav class="hidden md:flex items-center gap-1">
-          <button onclick="showSection('live')" class="nav-btn px-4 py-2 rounded-lg font-semibold text-sm hover:bg-slate-800 focus:bg-slate-800" data-section="live">Live</button>
-          <button onclick="showSection('vods')" class="nav-btn px-4 py-2 rounded-lg font-semibold text-sm hover:bg-slate-800 focus:bg-slate-800" data-section="vods">VODs</button>
-          <button onclick="showSection('history')" class="nav-btn px-4 py-2 rounded-lg font-semibold text-sm hover:bg-slate-800 focus:bg-slate-800" data-section="history">History</button>
-          <button onclick="showSection('standings')" class="nav-btn px-4 py-2 rounded-lg font-semibold text-sm hover:bg-slate-800 focus:bg-slate-800" data-section="standings">Standings</button>
-        </nav>
+    // Madden 20
+    { season: 6,  superBowl: "VI",   champion: "Cleveland Browns",           runnerUp: "", score: "", mvp: "CHUCKESMILES", notes: "Madden 20" },
+    { season: 7,  superBowl: "VII",  champion: "Green Bay Packers",          runnerUp: "", score: "", mvp: "JUDAH BES", notes: "Madden 20" },
+    { season: 8,  superBowl: "VIII", champion: "Miami Dolphins",             runnerUp: "", score: "", mvp: "DEBARGE 313", notes: "Madden 20" },
+    { season: 9,  superBowl: "IX",   champion: "Seattle Seahawks",           runnerUp: "", score: "", mvp: "JACK.FLANIGAN13", notes: "Madden 20" },
+    { season: 10, superBowl: "X",    champion: "Seattle Seahawks",           runnerUp: "", score: "", mvp: "", notes: "Madden 20" },
+    { season: 11, superBowl: "XI",   champion: "Los Angeles Chargers",       runnerUp: "", score: "", mvp: "EATW3LL", notes: "Madden 20" },
+    { season: 12, superBowl: "XII",  champion: "Seattle Seahawks",           runnerUp: "", score: "", mvp: "TWAN ZOOTED", notes: "Madden 20" },
+    { season: 13, superBowl: "XIII", champion: "Philadelphia Eagles",        runnerUp: "", score: "", mvp: "EATW3LL", notes: "Madden 20" },
 
-        <div class="flex items-center gap-2 sm:gap-3">
-          <div id="live-badge" class="hidden items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/20 border border-red-500/40">
-            <span class="w-2 h-2 rounded-full bg-red-500 live-dot"></span>
-            <span class="text-sm font-bold text-red-400" id="live-count">0 LIVE</span>
-          </div>
-          <div id="social-links" class="flex items-center gap-1.5"></div>
-          <button onclick="toggleFullscreen()" class="nav-btn p-2 rounded-lg hover:bg-slate-800" title="Fullscreen" aria-label="Toggle fullscreen">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
-          </button>
-        </div>
-      </div>
-    </div>
-  </header>
+    // Madden 21
+    { season: 14, superBowl: "XIV",  champion: "Dallas Cowboys",             runnerUp: "", score: "", mvp: "PATS8312", notes: "Madden 21" },
+    { season: 15, superBowl: "XV",   champion: "Carolina Panthers",          runnerUp: "", score: "", mvp: "EATW3LL", notes: "Madden 21" },
+    { season: 16, superBowl: "XVI",  champion: "Arizona Cardinals",          runnerUp: "", score: "", mvp: "COUNTRYSWAG77", notes: "Madden 21" },
+    { season: 17, superBowl: "XVII", champion: "Los Angeles Chargers",       runnerUp: "", score: "", mvp: "BARNEY024", notes: "Madden 21" },
+    { season: 18, superBowl: "XVIII",champion: "Miami Dolphins",             runnerUp: "", score: "", mvp: "IRONMAN170", notes: "Madden 21" },
+    { season: 19, superBowl: "XIX",  champion: "Kansas City Chiefs",         runnerUp: "", score: "", mvp: "EIFVIL", notes: "Madden 21" },
+    { season: 20, superBowl: "XX",   champion: "New England Patriots",       runnerUp: "", score: "", mvp: "SD YOUNG", notes: "Madden 21" },
+    { season: 21, superBowl: "XXI",  champion: "Arizona Cardinals",          runnerUp: "", score: "", mvp: "TR904", notes: "Madden 21" },
 
-  <!-- Score / Matchup Ticker -->
-  <div id="fnsl-ticker" aria-label="League ticker">
-    <div class="ticker-label">FNSL</div>
-    <div class="ticker-track">
-      <div class="ticker-content" id="ticker-content">
-        <!-- filled by JS -->
-      </div>
-    </div>
-  </div>
+    // Madden 22
+    { season: 22, superBowl: "XXII", champion: "Detroit Lions",              runnerUp: "", score: "", mvp: "MrMonarch", notes: "Madden 22" },
+    { season: 23, superBowl: "XXIII",champion: "Kansas City Chiefs",         runnerUp: "", score: "", mvp: "DEllis19", notes: "Madden 22" },
+    { season: 24, superBowl: "XXIV", champion: "Pittsburgh Steelers",        runnerUp: "", score: "", mvp: "COUNTRYSWAG77", notes: "Madden 22" },
+    { season: 25, superBowl: "XXV",  champion: "Minnesota Vikings",          runnerUp: "", score: "", mvp: "COOP", notes: "Madden 22" },
+    { season: 26, superBowl: "XXVI", champion: "Minnesota Vikings",          runnerUp: "", score: "", mvp: "COOP", notes: "Madden 22" },
+    { season: 27, superBowl: "XXVII",champion: "Minnesota Vikings",          runnerUp: "", score: "", mvp: "COOP", notes: "Madden 22" },
+    { season: 28, superBowl: "XXVIII",champion: "Minnesota Vikings",         runnerUp: "", score: "", mvp: "COOP", notes: "Madden 22 – 4-peat" },
 
-  <!-- Mobile Nav -->
-  <div class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-fnsl-card border-t border-slate-800 flex justify-around py-2">
-    <button onclick="showSection('live')" class="nav-btn flex flex-col items-center gap-1 px-3 py-2 text-xs font-medium" data-section="live">
-      <span class="text-lg">📡</span> Live
-    </button>
-    <button onclick="showSection('vods')" class="nav-btn flex flex-col items-center gap-1 px-3 py-2 text-xs font-medium" data-section="vods">
-      <span class="text-lg">📼</span> VODs
-    </button>
-    <button onclick="showSection('history')" class="nav-btn flex flex-col items-center gap-1 px-3 py-2 text-xs font-medium" data-section="history">
-      <span class="text-lg">🏆</span> History
-    </button>
-    <button onclick="showSection('standings')" class="nav-btn flex flex-col items-center gap-1 px-3 py-2 text-xs font-medium" data-section="standings">
-      <span class="text-lg">📊</span> Standings
-    </button>
-  </div>
+    // Madden 23
+    { season: 29, superBowl: "XXIX", champion: "Cincinnati Bengals",         runnerUp: "", score: "", mvp: "BWO", notes: "Madden 23" },
+    { season: 30, superBowl: "XXX",  champion: "Cincinnati Bengals",         runnerUp: "", score: "", mvp: "BWO", notes: "Madden 23" },
+    { season: 31, superBowl: "XXXI", champion: "Jacksonville Jaguars",       runnerUp: "", score: "", mvp: "MR.NOTIFICATION", notes: "Madden 23" },
+    { season: 32, superBowl: "XXXII",champion: "Las Vegas Raiders",          runnerUp: "", score: "", mvp: "SFG WILLIE", notes: "Madden 23" },
+    { season: 33, superBowl: "XXXIII",champion: "New York Jets",             runnerUp: "", score: "", mvp: "PORTLAND STORM", notes: "Madden 23" },
+    { season: 34, superBowl: "XXXIV",champion: "Detroit Lions",              runnerUp: "", score: "", mvp: "BARNEY024", notes: "Madden 23" },
+    { season: 35, superBowl: "XXXV", champion: "Tampa Bay Buccaneers",       runnerUp: "", score: "", mvp: "TAYLORS6G", notes: "Madden 23" },
+    { season: 36, superBowl: "XXXVI",champion: "Chicago Bears",              runnerUp: "", score: "", mvp: "PRIMETIME", notes: "Madden 23" },
+    { season: 37, superBowl: "XXXVII",champion: "Cleveland Browns",          runnerUp: "", score: "", mvp: "COUNTRYSWAG77", notes: "Madden 23" },
 
-  <main class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 pb-24 md:pb-12 pt-6">
+    // Madden 24
+    { season: 38, superBowl: "XXXVIII", champion: "Denver Broncos",          runnerUp: "", score: "", mvp: "S-TRADA", notes: "Madden 24" },
+    { season: 39, superBowl: "XXXIX",   champion: "Baltimore Ravens",        runnerUp: "", score: "", mvp: "PRIMETIME", notes: "Madden 24" },
+    { season: 40, superBowl: "XL",      champion: "Atlanta Falcons",         runnerUp: "", score: "", mvp: "BWO", notes: "Madden 24" },
+    { season: 41, superBowl: "XLI",     champion: "Atlanta Falcons",         runnerUp: "", score: "", mvp: "BWO", notes: "Madden 24" },
+    { season: 42, superBowl: "XLII",    champion: "Atlanta Falcons",         runnerUp: "", score: "", mvp: "BWO", notes: "Madden 24 – 3-peat" },
+    { season: 43, superBowl: "XLIII",   champion: "Los Angeles Chargers",    runnerUp: "", score: "", mvp: "COUNTRYSWAG77", notes: "Madden 24" },
+    { season: 44, superBowl: "XLIV",    champion: "Las Vegas Raiders",       runnerUp: "", score: "", mvp: "BARNEY024", notes: "Madden 24" },
 
-    <!-- HERO / LIVE SECTION -->
-    <section id="section-live" class="section">
-      <div class="mb-8">
-        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
-          <div>
-            <h2 class="text-3xl md:text-4xl font-black tracking-tight mb-2">Live Streams</h2>
-            <p class="text-slate-400 text-lg">Welcome to FNSL.TV. For the realest FNSL experience, watch the games as they happen.</p>
-          </div>
-          <div class="flex gap-3">
-            <button onclick="playAllLive()" class="nav-btn px-5 py-3 rounded-xl bg-green-600 hover:bg-green-500 font-bold text-white shadow-lg shadow-green-600/30 flex items-center gap-2">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/></svg>
-              Play All Live
-            </button>
-          </div>
-        </div>
+    // Madden 25
+    { season: 45, superBowl: "XLV",   champion: "Washington Commanders",     runnerUp: "", score: "", mvp: "SFG WILLIE", notes: "Madden 25" },
+    { season: 46, superBowl: "XLVI",  champion: "Washington Commanders",     runnerUp: "", score: "", mvp: "SFG WILLIE", notes: "Madden 25" },
+    { season: 47, superBowl: "XLVII", champion: "Denver Broncos",            runnerUp: "", score: "", mvp: "MR.NOTIFICATION", notes: "Madden 25" },
+    { season: 48, superBowl: "XLVIII",champion: "Washington Commanders",     runnerUp: "", score: "", mvp: "SFG WILLIE", notes: "Madden 25" },
+    { season: 49, superBowl: "XLIX",  champion: "Seattle Seahawks",          runnerUp: "", score: "", mvp: "COOP", notes: "Madden 25" },
+    { season: 50, superBowl: "L",     champion: "Denver Broncos",            runnerUp: "", score: "", mvp: "MR.NOTIFICATION", notes: "Madden 25" },
 
-        <!-- Live status bar -->
-        <div id="live-status" class="rounded-2xl bg-fnsl-card border border-slate-800 p-5 mb-8 flex flex-wrap items-center justify-between gap-4">
-          <div class="flex items-center gap-4">
-            <div class="w-14 h-14 rounded-2xl bg-slate-800 flex items-center justify-center text-2xl">📺</div>
-            <div>
-              <p class="font-bold text-lg" id="live-status-text">Checking for live streams...</p>
-              <p class="text-slate-400 text-sm">FNSL channels are monitored automatically when configured.</p>
-            </div>
-          </div>
-          <button onclick="refreshStreams()" class="nav-btn px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 font-medium text-sm">
-            Refresh
-          </button>
-        </div>
+    // Madden 26
+    { season: 51, superBowl: "LI",    champion: "New York Giants",           runnerUp: "", score: "", mvp: "SMOKIE", notes: "Madden 26" },
+    { season: 52, superBowl: "LII",   champion: "New York Giants",           runnerUp: "", score: "", mvp: "SMOKIE", notes: "Madden 26" },
+    { season: 53, superBowl: "LIII",  champion: "Baltimore Ravens",          runnerUp: "", score: "", mvp: "BWO", notes: "Madden 26" },
+    { season: 54, superBowl: "LIV",   champion: "San Francisco 49ers",       runnerUp: "", score: "", mvp: "SFG WILLIE", notes: "Madden 26" },
+    { season: 55, superBowl: "LV",    champion: "Detroit Lions",             runnerUp: "", score: "", mvp: "PRIMETIME", notes: "Madden 26" },
+    { season: 56, superBowl: "LVI",   champion: "Las Vegas Raiders",         runnerUp: "", score: "", mvp: "MR.NOTIFICATION", notes: "Madden 26" },
+    { season: 57, superBowl: "LVII",  champion: "Jacksonville Jaguars",      runnerUp: "", score: "", mvp: "COACH OCINCO", notes: "Madden 26 – Current defending champions" }
+  ],
 
-        <!-- Streams + X feed columns -->
-        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-          <!-- Left: live streams -->
-          <div class="xl:col-span-8 min-w-0">
-            <div id="live-streams" class="streams-grid">
-              <!-- Populated by JS -->
-            </div>
-            <div id="no-live" class="hidden text-center py-16 rounded-2xl border border-dashed border-slate-700 bg-fnsl-card/50">
-              <div class="text-5xl mb-4">😴</div>
-              <h3 class="text-xl font-bold mb-2">No streams currently live</h3>
-              <p class="text-slate-400 max-w-md mx-auto">When league members go live on Twitch, they'll appear here. You can also add channels in the config.</p>
-            </div>
-          </div>
+  // =========================================================
+  // STANDINGS (update weekly)
+  // =========================================================
+  standings: {
+    afc: [
+      { team: "Buffalo Bills", record: "16-1", owner: "" },
+      { team: "Jacksonville Jaguars", record: "14-3", owner: "Coach Ocinco" },
+      { team: "New York Jets", record: "13-4", owner: "YoungMoses" },
+      { team: "Indianapolis Colts", record: "13-4", owner: "Willie" },
+      { team: "Denver Broncos", record: "12-5", owner: "Vurm" },
+      { team: "Cincinnati Bengals", record: "10-7", owner: "dellis19" },
+      { team: "New England Patriots", record: "8-9", owner: "Primetime" },
+      { team: "Pittsburgh Steelers", record: "8-9", owner: "AlmoneyDMG" },
+      { team: "Houston Texans", record: "6-11", owner: "HighlyAnti" },
+      { team: "Cleveland Browns", record: "6-11", owner: "Mr.Notification" },
+      { team: "Kansas City Chiefs", record: "6-11", owner: "tr904" },
+      { team: "Los Angeles Chargers", record: "5-12", owner: "Quailman" },
+      { team: "Las Vegas Raiders", record: "3-14", owner: "Dustin" },
+      { team: "Tennessee Titans", record: "1-16", owner: "Coach Ocinco" },
+      { team: "Miami Dolphins", record: "1-16", owner: "CoolCam" },
+      { team: "Baltimore Ravens", record: "1-16", owner: "Tchanka" },
+    ],
+    nfc: [
+      { team: "Atlanta Falcons", record: "17-0", owner: "BWO" },
+      { team: "Seattle Seahawks", record: "16-1", owner: "Patrik" },
+      { team: "New York Giants", record: "15-2", owner: "Smokie" },
+      { team: "Detroit Lions", record: "13-4", owner: "DaytoDayDavis" },
+      { team: "Arizona Cardinals", record: "11-6", owner: "BDog" },
+      { team: "Chicago Bears", record: "11-6", owner: "Keezy" },
+      { team: "Green Bay Packers", record: "10-7", owner: "COOP" },
+      { team: "Los Angeles Rams", record: "10-7", owner: "Jay B" },
+      { team: "Carolina Panthers", record: "10-7", owner: "countryswag77" },
+      { team: "Tampa Bay Buccaneers", record: "9-8", owner: "Vjackson" },
+      { team: "Philadelphia Eagles", record: "9-8", owner: "Stu" },
+      { team: "Washington Commanders", record: "7-10", owner: "Redskins4life" },
+      { team: "San Francisco 49ers", record: "3-14", owner: "RJ" },
+      { team: "Dallas Cowboys", record: "3-14", owner: "Jordan" },
+      { team: "Minnesota Vikings", record: "3-14", owner: "Rod" },
+      { team: "New Orleans Saints", record: "2-15", owner: "AmazingCar" },
+    ]
+  }
+};
 
-          <!-- Right: League X Feed -->
-          <aside class="xl:col-span-4" id="x-feed-section">
-            <div class="xl:sticky xl:top-24">
-              <div class="flex items-center justify-between gap-2 mb-3">
-                <div>
-                  <h3 class="text-lg font-bold">League X Feed</h3>
-                  <p class="text-slate-400 text-xs mt-0.5">Tag <span class="text-slate-200">@FNSLMadden</span> · <span class="text-slate-200">#FNSL</span></p>
-                </div>
-                <a href="https://x.com/FNSLMadden" target="_blank" rel="noopener" class="social-btn" style="color:#e7e9ea" title="Open @FNSLMadden">
-                  <svg viewBox="0 0 24 24" fill="currentColor" style="width:1.1rem;height:1.1rem"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                </a>
-              </div>
-              <div class="rounded-2xl border border-slate-800 bg-fnsl-card overflow-hidden p-2">
-                <a class="twitter-timeline"
-                   data-theme="dark"
-                   data-chrome="noheader nofooter noborders transparent"
-                   data-height="640"
-                   href="https://twitter.com/FNSLMadden?ref_src=twsrc%5Etfw">
-                  Posts by @FNSLMadden
-                </a>
-              </div>
-            </div>
-          </aside>
-        </div>
-      </div>
-
-      <!-- Featured / Around the League -->
-      <div class="mt-12">
-        <h3 class="text-2xl font-bold mb-4">Around the FNSL</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <!-- 1. Season / Cycle -->
-          <div class="tv-card rounded-2xl bg-fnsl-card border border-slate-800 p-5 flex flex-col justify-between min-h-[140px]">
-            <div>
-              <p class="text-xs font-bold text-blue-400 uppercase tracking-wider mb-2">Cycle</p>
-              <p class="font-black text-2xl tracking-tight" id="cycle-season">M27 - S1</p>
-              <p class="text-slate-300 font-semibold mt-1" id="current-season">Season 58</p>
-            </div>
-            <div class="mt-3 flex justify-end">
-              <img src="logo.jpg" alt="FNSL" class="h-10 w-auto object-contain opacity-90" />
-            </div>
-          </div>
-          <!-- 2. Top Stats Slideshow -->
-          <div class="tv-card rounded-2xl bg-fnsl-card border border-slate-800 p-5 min-h-[140px]">
-            <p class="text-xs font-bold text-purple-400 uppercase tracking-wider mb-3">League Leaders</p>
-            <div id="stats-slideshow" class="relative min-h-[72px]">
-              <!-- slides filled by JS -->
-            </div>
-            <div id="stats-dots" class="flex gap-1.5 mt-3 justify-center"></div>
-          </div>
-          <!-- 3. Defending Champ -->
-          <div class="tv-card rounded-2xl bg-fnsl-card border border-green-500/20 p-5 min-h-[140px] relative overflow-hidden">
-            <div class="absolute -right-2 -bottom-4 opacity-20 pointer-events-none">
-              <img src="lombardi.jpg" alt="" class="h-28 w-auto object-contain" />
-            </div>
-            <p class="text-xs font-bold text-green-400 uppercase tracking-wider mb-3 relative z-10">Defending Champ</p>
-            <div class="flex items-center gap-3 relative z-10">
-              <img id="champ-logo" src="" alt="" class="w-14 h-14 object-contain drop-shadow-lg" style="display:none" />
-              <div class="min-w-0">
-                <p class="font-bold text-lg leading-tight" id="defending-champ">—</p>
-                <p class="text-slate-400 text-xs mt-1 flex items-center gap-1.5">
-                  <img src="lombardi.jpg" alt="" class="h-4 w-auto object-contain inline-block" />
-                  Super Bowl Champions
-                </p>
-                <p class="champ-signature" id="defending-coach">Coach Ocinco</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-<!-- VODS SECTION -->
-    <section id="section-vods" class="section hidden">
-      <div class="mb-8">
-        <h2 class="text-3xl md:text-4xl font-black tracking-tight mb-2">Past Streams & VODs</h2>
-        <p class="text-slate-400 text-lg mb-6">Relive classic FNSL matchups, draft shows, and Super Bowls.</p>
-
-        <div class="flex flex-wrap gap-3 mb-6">
-          <input type="search" id="vod-search" placeholder="Search VODs by team, week, season..." 
-                 class="flex-1 min-w-[240px] px-4 py-3 rounded-xl bg-fnsl-card border border-slate-700 focus:border-green-500 outline-none text-base"
-                 oninput="filterVods()">
-          <select id="vod-filter" onchange="filterVods()" class="px-4 py-3 rounded-xl bg-fnsl-card border border-slate-700 outline-none">
-            <option value="all">All Types</option>
-            <option value="game">Games</option>
-            <option value="draft">Drafts</option>
-            <option value="show">Shows / Podcasts</option>
-            <option value="superbowl">Super Bowls</option>
-          </select>
-        </div>
-
-        <div id="vod-grid" class="streams-grid">
-          <!-- Populated by JS -->
-        </div>
-      </div>
-    </section>
-
-    <!-- HISTORY SECTION -->
-    <section id="section-history" class="section hidden">
-      <div class="mb-8">
-        <h2 class="text-3xl md:text-4xl font-black tracking-tight mb-2">League History</h2>
-        <p class="text-slate-400 text-lg mb-6">Every FNSL Super Bowl champion. Build the legacy.</p>
-
-        <!-- Champions table -->
-        <div class="rounded-2xl border border-slate-800 overflow-hidden bg-fnsl-card">
-          <div class="overflow-x-auto">
-            <table class="w-full text-left">
-              <thead class="bg-slate-900/80 text-slate-400 text-sm uppercase tracking-wider">
-                <tr>
-                  <th class="px-5 py-4 font-semibold">Season</th>
-                  <th class="px-5 py-4 font-semibold">Super Bowl</th>
-                  <th class="px-5 py-4 font-semibold">Champion</th>
-                  <th class="px-5 py-4 font-semibold">Runner-up</th>
-                  <th class="px-5 py-4 font-semibold">Score</th>
-                  <th class="px-5 py-4 font-semibold">MVP / Notes</th>
-                </tr>
-              </thead>
-              <tbody id="history-tbody" class="divide-y divide-slate-800">
-                <!-- Populated by JS -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- All-time leaders -->
-        <div class="mt-10">
-          <h3 class="text-2xl font-bold mb-4">All-Time Titles</h3>
-          <div id="titles-leaderboard" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            <!-- Populated by JS -->
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- STANDINGS SECTION -->
-    <section id="section-standings" class="section hidden">
-      <div class="mb-8">
-        <h2 class="text-3xl md:text-4xl font-black tracking-tight mb-2">Current Standings</h2>
-        <p class="text-slate-400 text-lg mb-6">Update these from NeonSportz or your league tracker.</p>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div class="rounded-2xl border border-slate-800 bg-fnsl-card overflow-hidden">
-            <div class="px-5 py-4 bg-red-600/20 border-b border-slate-800">
-              <h3 class="font-bold text-lg text-red-300">AFC</h3>
-            </div>
-            <div id="standings-afc" class="divide-y divide-slate-800">
-              <!-- Populated -->
-            </div>
-          </div>
-          <div class="rounded-2xl border border-slate-800 bg-fnsl-card overflow-hidden">
-            <div class="px-5 py-4 bg-blue-600/20 border-b border-slate-800">
-              <h3 class="font-bold text-lg text-blue-300">NFC</h3>
-            </div>
-            <div id="standings-nfc" class="divide-y divide-slate-800">
-              <!-- Populated -->
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- Fullscreen Player Overlay -->
-  <div id="player-overlay" class="fixed inset-0 z-[100] bg-black flex flex-col">
-    <div class="flex items-center justify-between p-4 bg-black/80">
-      <h3 id="player-title" class="font-bold text-lg"></h3>
-      <button onclick="closePlayer()" class="nav-btn p-2 rounded-lg hover:bg-slate-800 text-2xl leading-none">&times;</button>
-    </div>
-    <div class="flex-1 flex items-center justify-center">
-      <div id="player-container" class="w-full h-full max-w-7xl"></div>
-    </div>
-  </div>
-
-  <!-- Footer -->
-  <footer class="border-t border-slate-800 py-8 mt-12">
-    <div class="max-w-[1800px] mx-auto px-6 text-center text-slate-500 text-sm">
-      <div id="social-links-footer" class="flex flex-wrap gap-3 justify-center mb-5"></div>
-      <p>FNSL TV • Father N Son League</p>
-      <p class="mt-1">Works on phones, tablets, computers &amp; TVs</p>
-    </div>
-  </footer>
-
-  <script src="data.js"></script>
-  <script src="app.js"></script>
-  <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-</body>
-</html>
+// Helper: compute titles count from history
+function getTitleCounts() {
+  const counts = {};
+  FNSL_CONFIG.history.forEach(h => {
+    counts[h.champion] = (counts[h.champion] || 0) + 1;
+  });
+  return Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([team, titles]) => ({ team, titles }));
+}

@@ -1,0 +1,19 @@
+AFTER UPLOADING TO GITHUB, OPEN EACH FILE AND CHECK THE FIRST LINE:
+
+index.html  → must start with:  <!DOCTYPE html>
+app.js      → must start with:  // FNSL TV - Application Logic
+data.js     → must start with:  // FNSL TV - CONFIG & DATA
+api/live.js → must start with:  // Vercel Serverless Function
+
+CORRECT FILE SIZES (approximate):
+index.html     ~24 KB
+app.js         ~30 KB
+data.js        ~23 KB
+api/live.js    ~3 KB
+logo.jpg       ~1.8 MB  (if it's only ~24 KB, you uploaded the wrong file)
+lombardi.jpg   ~320 KB
+package.json   ~65 bytes
+vercel.json    ~24 bytes
+
+If app.js shows "Vercel Serverless Function" you uploaded live.js as app.js — FIX IT.
+If data.js shows "Application Logic" you uploaded app.js as data.js — FIX IT.

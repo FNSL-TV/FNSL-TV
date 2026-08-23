@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupKeyboardNav();
 
   // Always paint stream cards first (offline ok), then try live detect
+  setupStreamClicks();
   renderLiveStreams();
   checkLiveStreams();
 
@@ -377,101 +378,118 @@ function createStreamCard(stream) {
     </div>
   `;
 
-  card.addEventListener('click', () => openStream(stream));
-  card.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      openStream(stream);
-    }
-  });
+  // Data attributes for reliable event delegation
+  card.dataset.streamChannel = stream.channel || '';
+  card.dataset.streamPlatform = stream.platform || 'twitch';
+  card.dataset.streamTitle = stream.title || '';
+  card.dataset.streamOwner = stream.owner || '';
+  card.dataset.streamVideoId = stream.videoId || '';
+  card.dataset.isLive = stream.isLive ? '1' : '0';
 
   return card;
 }
 
 function openStream(stream) {
-  const overlay = document.getElementById('player-overlay');
-  const container = document.getElementById('player-container');
+  console.log('[FNSL] openStream', stream);
+
+  // 1) Show the shell immediately so the user always sees feedback
+  let overlay = document.getElementById('player-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'player-overlay';
+    document.body.appendChild(overlay);
+  }
+  overlay.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:#0a0a0f;border-bottom:1px solid #1e293b;flex-shrink:0">
+      <h3 id="player-title" style="margin:0;font-size:1.1rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></h3>
+      <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+        <a id="player-open-link" href="#" target="_blank" rel="noopener"
+           style="display:none;padding:6px 12px;border-radius:8px;background:#7c3aed;color:#fff;font-size:0.875rem;font-weight:600;text-decoration:none">Open on Twitch</a>
+        <button type="button" id="player-close-btn" style="background:transparent;border:0;color:#fff;font-size:1.75rem;line-height:1;cursor:pointer;padding:4px 8px">&times;</button>
+      </div>
+    </div>
+    <div id="player-live-switcher" style="display:none;flex-wrap:wrap;gap:8px;padding:8px 12px;background:#020617;border-bottom:1px solid #1e293b"></div>
+    <div style="flex:1;position:relative;min-height:0;background:#000">
+      <div id="player-container" style="position:absolute;inset:0"></div>
+    </div>
+  `;
+  overlay.style.cssText = 'display:flex !important;flex-direction:column;position:fixed !important;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;z-index:2147483647 !important;background:#000;margin:0;padding:0;';
+  overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+
+  const closeBtn = document.getElementById('player-close-btn');
+  if (closeBtn) closeBtn.onclick = () => closePlayer();
+
   const title = document.getElementById('player-title');
+  const container = document.getElementById('player-container');
   const openLink = document.getElementById('player-open-link');
   const switcher = document.getElementById('player-live-switcher');
 
-  if (title) title.textContent = stream.title || stream.channel || 'Stream';
+  if (title) title.textContent = stream.title || stream.channel || 'Live Stream';
 
   const host = (window.location.hostname || 'localhost').toLowerCase();
-  // Twitch parent must match the site domain exactly
-  const parentList = [host, 'fnsl-tv.vercel.app', 'localhost'];
-  const parentParams = [...new Set(parentList)].map(p => 'parent=' + encodeURIComponent(p)).join('&');
+  const parents = [...new Set([host, 'fnsl-tv.vercel.app', 'localhost'])]
+    .map(p => 'parent=' + encodeURIComponent(p)).join('&');
 
   let externalUrl = '';
-  let embed = '';
 
-  if (stream.platform === 'twitch' && stream.channel) {
+  if ((stream.platform === 'twitch' || !stream.platform) && stream.channel) {
     const ch = String(stream.channel).trim();
     externalUrl = 'https://www.twitch.tv/' + encodeURIComponent(ch);
-    // muted=true helps browsers allow autoplay; user can unmute in player
-    embed = '<iframe src="https://player.twitch.tv/?channel=' + encodeURIComponent(ch) + '&' + parentParams + '&autoplay=true&muted=false" ' +
-      'allowfullscreen allow="autoplay; fullscreen; encrypted-media" ' +
-      'style="border:0;position:absolute;inset:0;width:100%;height:100%;"></iframe>';
+    if (openLink) {
+      openLink.href = externalUrl;
+      openLink.style.display = 'inline-flex';
+    }
+    if (container) {
+      container.innerHTML = '<iframe src="https://player.twitch.tv/?channel=' + encodeURIComponent(ch) +
+        '&' + parents + '&autoplay=true&muted=false" allowfullscreen allow="autoplay; fullscreen; encrypted-media" ' +
+        'style="border:0;position:absolute;inset:0;width:100%;height:100%;"></iframe>';
+    }
   } else if (stream.platform === 'youtube' && stream.videoId) {
     externalUrl = 'https://www.youtube.com/watch?v=' + encodeURIComponent(stream.videoId);
-    embed = '<iframe src="https://www.youtube.com/embed/' + encodeURIComponent(stream.videoId) + '?autoplay=1" ' +
-      'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen ' +
-      'style="border:0;position:absolute;inset:0;width:100%;height:100%;"></iframe>';
-  } else if (stream.url) {
-    window.open(stream.url, '_blank');
-    return;
-  } else {
-    embed = '<div style="color:#94a3b8;text-align:center;padding:3rem"><p>No stream URL available</p></div>';
-  }
-
-  if (!overlay || !container) {
-    if (externalUrl) window.location.href = externalUrl;
-    return;
-  }
-
-  container.innerHTML = embed;
-
-  if (openLink) {
-    if (externalUrl) {
+    if (openLink) {
       openLink.href = externalUrl;
-      openLink.classList.remove('hidden');
       openLink.style.display = 'inline-flex';
-    } else {
-      openLink.classList.add('hidden');
+      openLink.textContent = 'Open on YouTube';
     }
+    if (container) {
+      container.innerHTML = '<iframe src="https://www.youtube.com/embed/' + encodeURIComponent(stream.videoId) +
+        '?autoplay=1" allowfullscreen allow="autoplay; fullscreen; encrypted-media" ' +
+        'style="border:0;position:absolute;inset:0;width:100%;height:100%;"></iframe>';
+    }
+  } else if (container) {
+    container.innerHTML = '<div style="color:#94a3b8;text-align:center;padding:3rem"><p>No channel linked for this card.</p></div>';
   }
 
-  // Quick-switch bar: other live games
+  // Live switcher
   if (switcher) {
-    const liveOnes = getCurrentlyLiveStreams().filter(s => {
-      const a = (s.channel || '').toLowerCase();
-      const b = (stream.channel || '').toLowerCase();
-      return a && a !== b;
-    });
-    if (liveOnes.length) {
-      switcher.innerHTML = liveOnes.map(s => {
-        const label = escapeHtml((s.title || s.channel || 'Live').replace('• Stream', '').trim());
-        return '<button type="button" class="player-switch-btn" data-ch="' + escapeHtml(s.channel) + '">' + label + '</button>';
-      }).join('');
-      switcher.classList.remove('hidden');
-      switcher.querySelectorAll('button').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const ch = btn.getAttribute('data-ch');
-          const match = getCurrentlyLiveStreams().find(s => (s.channel || '').toLowerCase() === ch.toLowerCase())
-            || (FNSL_CONFIG.featuredStreams || []).find(s => (s.channel || '').toLowerCase() === ch.toLowerCase());
-          if (match) openStream({ ...match, isLive: true, platform: 'twitch' });
+    try {
+      const liveOnes = getCurrentlyLiveStreams().filter(s =>
+        (s.channel || '').toLowerCase() !== (stream.channel || '').toLowerCase()
+      );
+      if (liveOnes.length) {
+        switcher.style.display = 'flex';
+        switcher.innerHTML = liveOnes.map(s =>
+          '<button type="button" class="player-switch-btn" data-ch="' + escapeHtml(s.channel) + '">' +
+          escapeHtml((s.title || s.channel || 'Live').replace('• Stream', '').trim()) + '</button>'
+        ).join('');
+        switcher.querySelectorAll('button').forEach(btn => {
+          btn.onclick = (ev) => {
+            ev.stopPropagation();
+            const ch = btn.getAttribute('data-ch');
+            const match = getCurrentlyLiveStreams().find(s => (s.channel || '').toLowerCase() === (ch || '').toLowerCase())
+              || (FNSL_CONFIG.featuredStreams || []).find(s => (s.channel || '').toLowerCase() === (ch || '').toLowerCase());
+            if (match) openStream(Object.assign({}, match, { isLive: true, platform: 'twitch' }));
+          };
         });
-      });
-    } else {
-      switcher.innerHTML = '';
-      switcher.classList.add('hidden');
+      } else {
+        switcher.style.display = 'none';
+        switcher.innerHTML = '';
+      }
+    } catch (err) {
+      console.warn('[FNSL] switcher', err);
     }
   }
-
-  overlay.classList.add('active');
-  overlay.style.cssText = 'display:flex !important;position:fixed !important;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;z-index:99999 !important;background:#000;flex-direction:column;margin:0;padding:0;';
-  document.body.style.overflow = 'hidden';
 }
 
 function getCurrentlyLiveStreams() {
@@ -704,6 +722,33 @@ function renderHistory() {
 }
 
 
+
+
+// ---------- CLICK DELEGATION (survives re-renders) ----------
+function setupStreamClicks() {
+  const grid = document.getElementById('live-streams');
+  if (!grid || grid.dataset.clicksBound === '1') return;
+  grid.dataset.clicksBound = '1';
+
+  grid.addEventListener('click', (e) => {
+    const card = e.target.closest('.stream-card');
+    if (!card || !grid.contains(card)) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const stream = {
+      channel: card.dataset.streamChannel || '',
+      platform: card.dataset.streamPlatform || 'twitch',
+      title: card.dataset.streamTitle || 'Stream',
+      owner: card.dataset.streamOwner || '',
+      videoId: card.dataset.streamVideoId || '',
+      isLive: card.dataset.isLive === '1'
+    };
+
+    console.log('[FNSL] stream card clicked', stream);
+    openStream(stream);
+  });
+}
 
 // ---------- DIVISION RANKINGS SLIDESHOW (8 pages) ----------
 let divisionSlideIndex = 0;

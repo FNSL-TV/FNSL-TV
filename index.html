@@ -81,6 +81,10 @@
       height: 100%;
       border: 0;
     }
+    .div-rank-row { display: flex; align-items: center; justify-content: space-between; padding: 0.55rem 0; border-bottom: 1px solid rgba(51,65,85,0.5); }
+    .div-rank-row:last-child { border-bottom: none; }
+    .div-slide-enter { animation: fadeIn 0.4s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
     /* Grid for streams optimized for TV */
     .streams-grid {
       display: grid;
@@ -389,26 +393,28 @@
             </div>
           </div>
 
-          <!-- Right: League X Feed -->
-          <aside class="xl:col-span-4" id="x-feed-section">
+          <!-- Right: Division Rankings Slideshow (8 pages) -->
+          <aside class="xl:col-span-4" id="division-rankings-section">
             <div class="xl:sticky xl:top-24">
               <div class="flex items-center justify-between gap-2 mb-3">
                 <div>
-                  <h3 class="text-lg font-bold">League X Feed</h3>
-                  <p class="text-slate-400 text-xs mt-0.5">Tag <span class="text-slate-200">@FNSLMadden</span> · <span class="text-slate-200">#FNSL</span></p>
+                  <h3 class="text-lg font-bold">Division Rankings</h3>
+                  <p class="text-slate-400 text-xs mt-0.5">8 divisions · auto-rotating</p>
                 </div>
-                <a href="https://x.com/FNSLMadden" target="_blank" rel="noopener" class="social-btn" style="color:#e7e9ea" title="Open @FNSLMadden">
-                  <svg viewBox="0 0 24 24" fill="currentColor" style="width:1.1rem;height:1.1rem"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                </a>
+                <div class="flex items-center gap-1">
+                  <button type="button" id="div-prev" class="nav-btn p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700" aria-label="Previous division">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                  </button>
+                  <button type="button" id="div-next" class="nav-btn p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700" aria-label="Next division">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                  </button>
+                </div>
               </div>
-              <div class="rounded-2xl border border-slate-800 bg-fnsl-card overflow-hidden p-2">
-                <a class="twitter-timeline"
-                   data-theme="dark"
-                   data-chrome="noheader nofooter noborders transparent"
-                   data-height="640"
-                   href="https://twitter.com/FNSLMadden?ref_src=twsrc%5Etfw">
-                  Posts by @FNSLMadden
-                </a>
+              <div class="rounded-2xl border border-slate-800 bg-fnsl-card overflow-hidden">
+                <div id="division-slide" class="p-4 min-h-[420px]">
+                  <!-- filled by JS -->
+                </div>
+                <div id="division-dots" class="flex flex-wrap gap-1.5 justify-center px-3 pb-3"></div>
               </div>
             </div>
           </aside>
@@ -577,8 +583,8 @@
     </div>
   </footer>
 
-  <script src="data.js"></script>
-  <script src="app.js"></script>
+  <script src="fnsl-data.js"></script>
+  <script src="fnsl-app.js"></script>
   <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 </body>
 </html>

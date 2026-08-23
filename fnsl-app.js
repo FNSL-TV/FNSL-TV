@@ -9,6 +9,7 @@ let filteredVods = [];
 let liveStatusCache = {};       // { username: { isLive, title, viewerCount, ... } }
 let liveApiOk = false;           // true only when /api/live returned ok:true
 let lastLiveCheck = 0;
+let autoOpenedLiveDock = false;
 
 // ---------- INIT ----------
 document.addEventListener('DOMContentLoaded', () => {
@@ -301,6 +302,14 @@ function renderLiveStreams() {
   }
 
   updateLiveBadge(liveOnes.length);
+
+  // Auto-open the first live stream in the watch dock once per page load
+  if (!autoOpenedLiveDock && liveOnes.length > 0 && liveOnes[0].channel) {
+    autoOpenedLiveDock = true;
+    setTimeout(function () {
+      openStream(liveOnes[0]);
+    }, 500);
+  }
 }
 
 // NFL team logo lookup (ESPN CDN)
@@ -375,6 +384,17 @@ function createStreamCard(stream) {
         </div>
         <span>${viewers}</span>
       </div>
+      ${isLive && stream.channel ? `
+      <button type="button" class="watch-btn mt-3 w-full py-2.5 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold text-sm"
+        data-watch-channel="${escapeHtml(stream.channel)}"
+        data-watch-title="${escapeHtml(stream.title || stream.channel)}">
+        ▶ Watch on FNSL.TV
+      </button>` : (stream.channel ? `
+      <button type="button" class="watch-btn mt-3 w-full py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold text-sm"
+        data-watch-channel="${escapeHtml(stream.channel)}"
+        data-watch-title="${escapeHtml(stream.title || stream.channel)}">
+        Open channel
+      </button>` : '')}
     </div>
   `;
 
@@ -425,7 +445,9 @@ function openStream(stream) {
 
   // Show dock in normal page layout (visible, in viewport)
   dock.classList.remove('hidden');
-  dock.style.display = 'block';
+  dock.style.setProperty('display', 'block', 'important');
+  dock.style.setProperty('visibility', 'visible', 'important');
+  dock.style.setProperty('opacity', '1', 'important');
 
   // Scroll dock into view so user always sees it
   try {
@@ -726,22 +748,32 @@ function setupStreamClicks() {
   grid.dataset.clicksBound = '1';
 
   grid.addEventListener('click', (e) => {
+    const btn = e.target.closest('.watch-btn');
     const card = e.target.closest('.stream-card');
-    if (!card || !grid.contains(card)) return;
+    if (!btn && !card) return;
+    if ((btn && !grid.contains(btn)) || (card && !grid.contains(card))) return;
+
     e.preventDefault();
     e.stopPropagation();
 
-    const stream = {
-      channel: card.dataset.streamChannel || '',
-      platform: card.dataset.streamPlatform || 'twitch',
-      title: card.dataset.streamTitle || 'Stream',
-      owner: card.dataset.streamOwner || '',
-      videoId: card.dataset.streamVideoId || '',
-      isLive: card.dataset.isLive === '1'
-    };
+    let channel = '', title = '', platform = 'twitch', owner = '';
+    if (btn) {
+      channel = btn.getAttribute('data-watch-channel') || '';
+      title = btn.getAttribute('data-watch-title') || channel;
+    } else if (card) {
+      channel = card.dataset.streamChannel || '';
+      title = card.dataset.streamTitle || channel;
+      platform = card.dataset.streamPlatform || 'twitch';
+      owner = card.dataset.streamOwner || '';
+    }
 
-    console.log('[FNSL] stream card clicked', stream);
-    openStream(stream);
+    if (!channel) {
+      console.warn('[FNSL] click with no channel');
+      return;
+    }
+
+    console.log('[FNSL] watch click', channel);
+    openStream({ channel: channel, title: title, platform: platform, owner: owner, isLive: true });
   });
 }
 

@@ -392,103 +392,110 @@ function createStreamCard(stream) {
 function openStream(stream) {
   console.log('[FNSL] openStream', stream);
 
-  // 1) Show the shell immediately so the user always sees feedback
-  let overlay = document.getElementById('player-overlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'player-overlay';
-    document.body.appendChild(overlay);
+  // Remove any existing overlay so we start clean
+  document.querySelectorAll('#player-overlay').forEach(function (el) { el.remove(); });
+
+  var ch = (stream && stream.channel) ? String(stream.channel).trim() : '';
+  var titleText = (stream && (stream.title || stream.channel)) || 'Live Stream';
+  var host = (window.location.hostname || 'localhost').toLowerCase();
+  var parentQs = [host, 'fnsl-tv.vercel.app', 'localhost'].filter(function (v, i, a) {
+    return v && a.indexOf(v) === i;
+  }).map(function (p) { return 'parent=' + encodeURIComponent(p); }).join('&');
+
+  var externalUrl = ch ? ('https://www.twitch.tv/' + encodeURIComponent(ch)) : '';
+  var iframeHtml = '';
+  if (ch) {
+    iframeHtml = '<iframe src="https://player.twitch.tv/?channel=' + encodeURIComponent(ch) +
+      '&' + parentQs + '&autoplay=true&muted=true" allowfullscreen="true" allow="autoplay;fullscreen;encrypted-media" ' +
+      'style="border:0;position:absolute;top:0;left:0;width:100%;height:100%;"></iframe>';
+  } else {
+    iframeHtml = '<div style="color:#94a3b8;text-align:center;padding:4rem 1rem"><p style="font-size:1.1rem">No Twitch channel on this card.</p></div>';
   }
-  overlay.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:#0a0a0f;border-bottom:1px solid #1e293b;flex-shrink:0">
-      <h3 id="player-title" style="margin:0;font-size:1.1rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></h3>
-      <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
-        <a id="player-open-link" href="#" target="_blank" rel="noopener"
-           style="display:none;padding:6px 12px;border-radius:8px;background:#7c3aed;color:#fff;font-size:0.875rem;font-weight:600;text-decoration:none">Open on Twitch</a>
-        <button type="button" id="player-close-btn" style="background:transparent;border:0;color:#fff;font-size:1.75rem;line-height:1;cursor:pointer;padding:4px 8px">&times;</button>
-      </div>
-    </div>
-    <div id="player-live-switcher" style="display:none;flex-wrap:wrap;gap:8px;padding:8px 12px;background:#020617;border-bottom:1px solid #1e293b"></div>
-    <div style="flex:1;position:relative;min-height:0;background:#000">
-      <div id="player-container" style="position:absolute;inset:0"></div>
-    </div>
-  `;
-  overlay.style.cssText = 'display:flex !important;flex-direction:column;position:fixed !important;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;z-index:2147483647 !important;background:#000;margin:0;padding:0;';
-  overlay.classList.add('active');
+
+  var overlay = document.createElement('div');
+  overlay.id = 'player-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:#0a0a0f;border-bottom:1px solid #1e293b;flex-shrink:0;z-index:2">' +
+      '<h3 style="margin:0;font-size:1.05rem;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">' +
+        String(titleText).replace(/</g, '&lt;') +
+      '</h3>' +
+      '<div style="display:flex;gap:8px;align-items:center;flex-shrink:0">' +
+        (externalUrl
+          ? '<a href="' + externalUrl + '" target="_blank" rel="noopener" ' +
+            'style="display:inline-flex;padding:6px 12px;border-radius:8px;background:#7c3aed;color:#fff;font-size:0.85rem;font-weight:600;text-decoration:none">Open on Twitch</a>'
+          : '') +
+        '<button type="button" id="player-close-btn" aria-label="Close" ' +
+          'style="background:#1e293b;border:0;color:#fff;font-size:1.5rem;line-height:1;cursor:pointer;padding:6px 12px;border-radius:8px">&times;</button>' +
+      '</div>' +
+    '</div>' +
+    '<div id="player-live-switcher" style="display:none;flex-wrap:wrap;gap:8px;padding:8px 12px;background:#020617;border-bottom:1px solid #1e293b"></div>' +
+    '<div style="flex:1 1 auto;position:relative;min-height:200px;background:#000">' +
+      '<div id="player-container" style="position:absolute;top:0;left:0;right:0;bottom:0">' + iframeHtml + '</div>' +
+    '</div>';
+
+  // Force on top of everything
+  overlay.style.setProperty('display', 'flex', 'important');
+  overlay.style.setProperty('flex-direction', 'column', 'important');
+  overlay.style.setProperty('position', 'fixed', 'important');
+  overlay.style.setProperty('top', '0', 'important');
+  overlay.style.setProperty('left', '0', 'important');
+  overlay.style.setProperty('right', '0', 'important');
+  overlay.style.setProperty('bottom', '0', 'important');
+  overlay.style.setProperty('width', '100vw', 'important');
+  overlay.style.setProperty('height', '100vh', 'important');
+  overlay.style.setProperty('z-index', '2147483647', 'important');
+  overlay.style.setProperty('background', '#000', 'important');
+  overlay.style.setProperty('margin', '0', 'important');
+  overlay.style.setProperty('padding', '0', 'important');
+
+  document.body.appendChild(overlay);
   document.body.style.overflow = 'hidden';
 
-  const closeBtn = document.getElementById('player-close-btn');
-  if (closeBtn) closeBtn.onclick = () => closePlayer();
-
-  const title = document.getElementById('player-title');
-  const container = document.getElementById('player-container');
-  const openLink = document.getElementById('player-open-link');
-  const switcher = document.getElementById('player-live-switcher');
-
-  if (title) title.textContent = stream.title || stream.channel || 'Live Stream';
-
-  const host = (window.location.hostname || 'localhost').toLowerCase();
-  const parents = [...new Set([host, 'fnsl-tv.vercel.app', 'localhost'])]
-    .map(p => 'parent=' + encodeURIComponent(p)).join('&');
-
-  let externalUrl = '';
-
-  if ((stream.platform === 'twitch' || !stream.platform) && stream.channel) {
-    const ch = String(stream.channel).trim();
-    externalUrl = 'https://www.twitch.tv/' + encodeURIComponent(ch);
-    if (openLink) {
-      openLink.href = externalUrl;
-      openLink.style.display = 'inline-flex';
-    }
-    if (container) {
-      container.innerHTML = '<iframe src="https://player.twitch.tv/?channel=' + encodeURIComponent(ch) +
-        '&' + parents + '&autoplay=true&muted=false" allowfullscreen allow="autoplay; fullscreen; encrypted-media" ' +
-        'style="border:0;position:absolute;inset:0;width:100%;height:100%;"></iframe>';
-    }
-  } else if (stream.platform === 'youtube' && stream.videoId) {
-    externalUrl = 'https://www.youtube.com/watch?v=' + encodeURIComponent(stream.videoId);
-    if (openLink) {
-      openLink.href = externalUrl;
-      openLink.style.display = 'inline-flex';
-      openLink.textContent = 'Open on YouTube';
-    }
-    if (container) {
-      container.innerHTML = '<iframe src="https://www.youtube.com/embed/' + encodeURIComponent(stream.videoId) +
-        '?autoplay=1" allowfullscreen allow="autoplay; fullscreen; encrypted-media" ' +
-        'style="border:0;position:absolute;inset:0;width:100%;height:100%;"></iframe>';
-    }
-  } else if (container) {
-    container.innerHTML = '<div style="color:#94a3b8;text-align:center;padding:3rem"><p>No channel linked for this card.</p></div>';
+  var closeBtn = document.getElementById('player-close-btn');
+  if (closeBtn) {
+    closeBtn.onclick = function () { closePlayer(); };
   }
 
+  // Esc to close
+  function onKey(e) {
+    if (e.key === 'Escape') {
+      closePlayer();
+      document.removeEventListener('keydown', onKey);
+    }
+  }
+  document.addEventListener('keydown', onKey);
+
   // Live switcher
-  if (switcher) {
-    try {
-      const liveOnes = getCurrentlyLiveStreams().filter(s =>
-        (s.channel || '').toLowerCase() !== (stream.channel || '').toLowerCase()
-      );
+  try {
+    var switcher = document.getElementById('player-live-switcher');
+    if (switcher && typeof getCurrentlyLiveStreams === 'function') {
+      var liveOnes = getCurrentlyLiveStreams().filter(function (s) {
+        return (s.channel || '').toLowerCase() !== ch.toLowerCase();
+      });
       if (liveOnes.length) {
         switcher.style.display = 'flex';
-        switcher.innerHTML = liveOnes.map(s =>
-          '<button type="button" class="player-switch-btn" data-ch="' + escapeHtml(s.channel) + '">' +
-          escapeHtml((s.title || s.channel || 'Live').replace('• Stream', '').trim()) + '</button>'
-        ).join('');
-        switcher.querySelectorAll('button').forEach(btn => {
-          btn.onclick = (ev) => {
+        switcher.innerHTML = liveOnes.map(function (s) {
+          var label = String(s.title || s.channel || 'Live').replace('• Stream', '').trim();
+          return '<button type="button" data-ch="' + String(s.channel).replace(/"/g, '') + '" ' +
+            'style="font-size:0.75rem;font-weight:600;padding:0.35rem 0.65rem;border-radius:9999px;background:#14532d;color:#bbf7d0;border:1px solid #166534;cursor:pointer">' +
+            label.replace(/</g, '&lt;') + '</button>';
+        }).join('');
+        switcher.querySelectorAll('button').forEach(function (btn) {
+          btn.onclick = function (ev) {
             ev.stopPropagation();
-            const ch = btn.getAttribute('data-ch');
-            const match = getCurrentlyLiveStreams().find(s => (s.channel || '').toLowerCase() === (ch || '').toLowerCase())
-              || (FNSL_CONFIG.featuredStreams || []).find(s => (s.channel || '').toLowerCase() === (ch || '').toLowerCase());
+            var c = btn.getAttribute('data-ch');
+            var match = getCurrentlyLiveStreams().find(function (s) {
+              return (s.channel || '').toLowerCase() === String(c || '').toLowerCase();
+            });
             if (match) openStream(Object.assign({}, match, { isLive: true, platform: 'twitch' }));
           };
         });
-      } else {
-        switcher.style.display = 'none';
-        switcher.innerHTML = '';
       }
-    } catch (err) {
-      console.warn('[FNSL] switcher', err);
     }
+  } catch (err) {
+    console.warn('[FNSL] switcher', err);
   }
 }
 
@@ -526,18 +533,7 @@ function getCurrentlyLiveStreams() {
 }
 
 function closePlayer() {
-  const overlay = document.getElementById('player-overlay');
-  const container = document.getElementById('player-container');
-  const switcher = document.getElementById('player-live-switcher');
-  if (overlay) {
-    overlay.classList.remove('active');
-    overlay.style.cssText = 'display:none !important';
-  }
-  if (container) container.innerHTML = '';
-  if (switcher) {
-    switcher.innerHTML = '';
-    switcher.classList.add('hidden');
-  }
+  document.querySelectorAll('#player-overlay').forEach(function (el) { el.remove(); });
   document.body.style.overflow = '';
 }
 

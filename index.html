@@ -80,6 +80,16 @@
     #player-overlay.active {
       display: flex !important;
     }
+    .player-switch-btn {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.35rem 0.65rem;
+      border-radius: 9999px;
+      background: #14532d;
+      color: #bbf7d0;
+      border: 1px solid #166534;
+    }
+    .player-switch-btn:hover { background: #166534; color: #fff; }
     #player-container iframe {
       width: 100%;
       height: 100%;
@@ -561,20 +571,21 @@
 
   </main>
 
-  <!-- Fullscreen Player Overlay -->
-  <div id="player-overlay" class="fixed inset-0 z-[100] bg-black flex flex-col">
-    <div class="flex items-center justify-between gap-3 p-3 sm:p-4 bg-black/90 border-b border-slate-800 shrink-0">
+  <!-- Fullscreen Player Overlay — watch on-site, switch between live games -->
+  <div id="player-overlay" class="fixed inset-0 z-[100] bg-black flex flex-col" style="display:none">
+    <div class="flex items-center justify-between gap-3 p-3 sm:p-4 bg-black/95 border-b border-slate-800 shrink-0" style="z-index:2">
       <h3 id="player-title" class="font-bold text-base sm:text-lg truncate"></h3>
       <div class="flex items-center gap-2 shrink-0">
         <a id="player-open-link" href="#" target="_blank" rel="noopener"
            class="hidden px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-sm font-semibold text-white">
           Open on Twitch
         </a>
-        <button onclick="closePlayer()" class="nav-btn p-2 rounded-lg hover:bg-slate-800 text-2xl leading-none" aria-label="Close">&times;</button>
+        <button type="button" onclick="closePlayer()" class="nav-btn p-2 rounded-lg hover:bg-slate-800 text-2xl leading-none" aria-label="Close">&times;</button>
       </div>
     </div>
-    <div class="flex-1 relative min-h-0">
-      <div id="player-container" class="absolute inset-0 w-full h-full"></div>
+    <div id="player-live-switcher" class="hidden shrink-0 flex flex-wrap gap-2 px-3 py-2 bg-slate-950 border-b border-slate-800"></div>
+    <div class="flex-1 relative min-h-0" style="flex:1;position:relative;min-height:0">
+      <div id="player-container" class="absolute inset-0 w-full h-full" style="position:absolute;inset:0"></div>
     </div>
   </div>
 

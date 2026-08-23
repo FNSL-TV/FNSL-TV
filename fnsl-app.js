@@ -393,79 +393,133 @@ function openStream(stream) {
   const container = document.getElementById('player-container');
   const title = document.getElementById('player-title');
   const openLink = document.getElementById('player-open-link');
+  const switcher = document.getElementById('player-live-switcher');
 
-  title.textContent = stream.title || 'Stream';
+  if (title) title.textContent = stream.title || stream.channel || 'Stream';
 
-  // Twitch requires every domain that embeds the player as parent=
-  const host = window.location.hostname || 'localhost';
-  const parents = Array.from(new Set([
-    host,
-    host.replace(/^www\./, ''),
-    'localhost',
-    'fnsl-tv.vercel.app'
-  ])).filter(Boolean);
-  const parentParams = parents.map(p => `parent=${encodeURIComponent(p)}`).join('&');
+  const host = (window.location.hostname || 'localhost').toLowerCase();
+  // Twitch parent must match the site domain exactly
+  const parentList = [host, 'fnsl-tv.vercel.app', 'localhost'];
+  const parentParams = [...new Set(parentList)].map(p => 'parent=' + encodeURIComponent(p)).join('&');
 
-  let embed = '';
   let externalUrl = '';
+  let embed = '';
 
   if (stream.platform === 'twitch' && stream.channel) {
-    const ch = stream.channel.trim();
-    externalUrl = `https://www.twitch.tv/${encodeURIComponent(ch)}`;
-    embed = `<iframe
-      src="https://player.twitch.tv/?channel=${encodeURIComponent(ch)}&${parentParams}&autoplay=true&muted=false"
-      allowfullscreen
-      allow="autoplay; fullscreen"
-      class="w-full h-full"
-      style="border:none; position:absolute; inset:0; width:100%; height:100%;">
-    </iframe>`;
+    const ch = String(stream.channel).trim();
+    externalUrl = 'https://www.twitch.tv/' + encodeURIComponent(ch);
+    // muted=true helps browsers allow autoplay; user can unmute in player
+    embed = '<iframe src="https://player.twitch.tv/?channel=' + encodeURIComponent(ch) + '&' + parentParams + '&autoplay=true&muted=false" ' +
+      'allowfullscreen allow="autoplay; fullscreen; encrypted-media" ' +
+      'style="border:0;position:absolute;inset:0;width:100%;height:100%;"></iframe>';
   } else if (stream.platform === 'youtube' && stream.videoId) {
-    externalUrl = `https://www.youtube.com/watch?v=${encodeURIComponent(stream.videoId)}`;
-    embed = `<iframe
-      src="https://www.youtube.com/embed/${encodeURIComponent(stream.videoId)}?autoplay=1"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-      allowfullscreen
-      class="w-full h-full"
-      style="border:none; position:absolute; inset:0; width:100%; height:100%;">
-    </iframe>`;
+    externalUrl = 'https://www.youtube.com/watch?v=' + encodeURIComponent(stream.videoId);
+    embed = '<iframe src="https://www.youtube.com/embed/' + encodeURIComponent(stream.videoId) + '?autoplay=1" ' +
+      'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen ' +
+      'style="border:0;position:absolute;inset:0;width:100%;height:100%;"></iframe>';
   } else if (stream.url) {
     window.open(stream.url, '_blank');
     return;
   } else {
-    embed = `<div class="text-center p-12 text-slate-400">
-      <p class="text-xl mb-2">No embed available</p>
-      <p>Add a Twitch channel or YouTube video ID in data.js</p>
-    </div>`;
+    embed = '<div style="color:#94a3b8;text-align:center;padding:3rem"><p>No stream URL available</p></div>';
   }
 
   if (!overlay || !container) {
-    if (externalUrl) window.open(externalUrl, '_blank');
+    if (externalUrl) window.location.href = externalUrl;
     return;
   }
 
   container.innerHTML = embed;
+
   if (openLink) {
     if (externalUrl) {
       openLink.href = externalUrl;
       openLink.classList.remove('hidden');
-      openLink.style.display = '';
+      openLink.style.display = 'inline-flex';
     } else {
       openLink.classList.add('hidden');
     }
   }
+
+  // Quick-switch bar: other live games
+  if (switcher) {
+    const liveOnes = getCurrentlyLiveStreams().filter(s => {
+      const a = (s.channel || '').toLowerCase();
+      const b = (stream.channel || '').toLowerCase();
+      return a && a !== b;
+    });
+    if (liveOnes.length) {
+      switcher.innerHTML = liveOnes.map(s => {
+        const label = escapeHtml((s.title || s.channel || 'Live').replace('• Stream', '').trim());
+        return '<button type="button" class="player-switch-btn" data-ch="' + escapeHtml(s.channel) + '">' + label + '</button>';
+      }).join('');
+      switcher.classList.remove('hidden');
+      switcher.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const ch = btn.getAttribute('data-ch');
+          const match = getCurrentlyLiveStreams().find(s => (s.channel || '').toLowerCase() === ch.toLowerCase())
+            || (FNSL_CONFIG.featuredStreams || []).find(s => (s.channel || '').toLowerCase() === ch.toLowerCase());
+          if (match) openStream({ ...match, isLive: true, platform: 'twitch' });
+        });
+      });
+    } else {
+      switcher.innerHTML = '';
+      switcher.classList.add('hidden');
+    }
+  }
+
   overlay.classList.add('active');
-  overlay.style.display = 'flex';
+  overlay.style.cssText = 'display:flex !important;position:fixed !important;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;z-index:99999 !important;background:#000;flex-direction:column;margin:0;padding:0;';
   document.body.style.overflow = 'hidden';
+}
+
+function getCurrentlyLiveStreams() {
+  const out = [];
+  const seen = new Set();
+  (FNSL_CONFIG.featuredStreams || []).forEach(s => {
+    const ch = (s.channel || '').toLowerCase();
+    const live = s.isLive || (ch && liveStatusCache[ch]);
+    if (live && ch && !seen.has(ch)) {
+      seen.add(ch);
+      const info = liveStatusCache[ch];
+      out.push({
+        ...s,
+        isLive: true,
+        title: (info && info.title) || s.title,
+        channel: s.channel || (info && info.login),
+        platform: 'twitch'
+      });
+    }
+  });
+  Object.values(liveStatusCache || {}).forEach(info => {
+    const ch = (info.login || '').toLowerCase();
+    if (!ch || seen.has(ch)) return;
+    seen.add(ch);
+    out.push({
+      title: info.title || info.displayName || ch,
+      channel: info.login,
+      owner: info.displayName,
+      platform: 'twitch',
+      isLive: true
+    });
+  });
+  return out;
 }
 
 function closePlayer() {
   const overlay = document.getElementById('player-overlay');
   const container = document.getElementById('player-container');
+  const switcher = document.getElementById('player-live-switcher');
   if (overlay) {
     overlay.classList.remove('active');
-    overlay.style.display = 'none';
+    overlay.style.cssText = 'display:none !important';
   }
   if (container) container.innerHTML = '';
+  if (switcher) {
+    switcher.innerHTML = '';
+    switcher.classList.add('hidden');
+  }
   document.body.style.overflow = '';
 }
 

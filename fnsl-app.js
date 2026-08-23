@@ -392,7 +392,6 @@ function createStreamCard(stream) {
 function openStream(stream) {
   console.log('[FNSL] openStream', stream);
 
-  // Remove any existing overlay so we start clean
   document.querySelectorAll('#player-overlay').forEach(function (el) { el.remove(); });
 
   var ch = (stream && stream.channel) ? String(stream.channel).trim() : '';
@@ -403,27 +402,19 @@ function openStream(stream) {
   }).map(function (p) { return 'parent=' + encodeURIComponent(p); }).join('&');
 
   var externalUrl = ch ? ('https://www.twitch.tv/' + encodeURIComponent(ch)) : '';
-  var iframeHtml = '';
-  if (ch) {
-    iframeHtml = '<iframe src="https://player.twitch.tv/?channel=' + encodeURIComponent(ch) +
-      '&' + parentQs + '&autoplay=true&muted=true" allowfullscreen="true" allow="autoplay;fullscreen;encrypted-media" ' +
-      'style="border:0;position:absolute;top:0;left:0;width:100%;height:100%;"></iframe>';
-  } else {
-    iframeHtml = '<div style="color:#94a3b8;text-align:center;padding:4rem 1rem"><p style="font-size:1.1rem">No Twitch channel on this card.</p></div>';
-  }
 
   var overlay = document.createElement('div');
   overlay.id = 'player-overlay';
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
+
+  // Visible shell first (Twitch requires viewport + style visibility before embed)
   overlay.innerHTML =
-    '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:#0a0a0f;border-bottom:1px solid #1e293b;flex-shrink:0;z-index:2">' +
-      '<h3 style="margin:0;font-size:1.05rem;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">' +
-        String(titleText).replace(/</g, '&lt;') +
-      '</h3>' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:#0a0a0f;border-bottom:1px solid #1e293b;flex-shrink:0;height:56px;box-sizing:border-box">' +
+      '<h3 id="player-title" style="margin:0;font-size:1.05rem;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1"></h3>' +
       '<div style="display:flex;gap:8px;align-items:center;flex-shrink:0">' +
         (externalUrl
-          ? '<a href="' + externalUrl + '" target="_blank" rel="noopener" ' +
+          ? '<a id="player-open-link" href="' + externalUrl + '" target="_blank" rel="noopener" ' +
             'style="display:inline-flex;padding:6px 12px;border-radius:8px;background:#7c3aed;color:#fff;font-size:0.85rem;font-weight:600;text-decoration:none">Open on Twitch</a>'
           : '') +
         '<button type="button" id="player-close-btn" aria-label="Close" ' +
@@ -431,34 +422,36 @@ function openStream(stream) {
       '</div>' +
     '</div>' +
     '<div id="player-live-switcher" style="display:none;flex-wrap:wrap;gap:8px;padding:8px 12px;background:#020617;border-bottom:1px solid #1e293b"></div>' +
-    '<div style="flex:1 1 auto;position:relative;min-height:200px;background:#000">' +
-      '<div id="player-container" style="position:absolute;top:0;left:0;right:0;bottom:0">' + iframeHtml + '</div>' +
+    '<div id="player-stage" style="flex:1 1 auto;position:relative;width:100%;height:calc(100vh - 56px);min-height:320px;background:#111">' +
+      '<div id="player-container" style="position:absolute;top:0;left:0;width:100%;height:100%;visibility:visible;opacity:1"></div>' +
     '</div>';
 
-  // Force on top of everything
-  overlay.style.setProperty('display', 'flex', 'important');
-  overlay.style.setProperty('flex-direction', 'column', 'important');
-  overlay.style.setProperty('position', 'fixed', 'important');
-  overlay.style.setProperty('top', '0', 'important');
-  overlay.style.setProperty('left', '0', 'important');
-  overlay.style.setProperty('right', '0', 'important');
-  overlay.style.setProperty('bottom', '0', 'important');
-  overlay.style.setProperty('width', '100vw', 'important');
-  overlay.style.setProperty('height', '100vh', 'important');
-  overlay.style.setProperty('z-index', '2147483647', 'important');
-  overlay.style.setProperty('background', '#000', 'important');
-  overlay.style.setProperty('margin', '0', 'important');
-  overlay.style.setProperty('padding', '0', 'important');
+  overlay.style.cssText = [
+    'display:flex',
+    'flex-direction:column',
+    'position:fixed',
+    'top:0',
+    'left:0',
+    'width:100vw',
+    'height:100vh',
+    'z-index:2147483647',
+    'background:#000',
+    'margin:0',
+    'padding:0',
+    'visibility:visible',
+    'opacity:1',
+    'pointer-events:auto'
+  ].join(';');
 
   document.body.appendChild(overlay);
   document.body.style.overflow = 'hidden';
 
-  var closeBtn = document.getElementById('player-close-btn');
-  if (closeBtn) {
-    closeBtn.onclick = function () { closePlayer(); };
-  }
+  var titleEl = document.getElementById('player-title');
+  if (titleEl) titleEl.textContent = titleText;
 
-  // Esc to close
+  var closeBtn = document.getElementById('player-close-btn');
+  if (closeBtn) closeBtn.onclick = function () { closePlayer(); };
+
   function onKey(e) {
     if (e.key === 'Escape') {
       closePlayer();
@@ -466,6 +459,30 @@ function openStream(stream) {
     }
   }
   document.addEventListener('keydown', onKey);
+
+  // Mount iframe AFTER overlay is in the document and laid out (fixes Twitch visibility autoplay error)
+  var container = document.getElementById('player-container');
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      if (!container) return;
+      if (!ch) {
+        container.innerHTML = '<div style="color:#94a3b8;text-align:center;padding:4rem 1rem"><p>No Twitch channel on this card.</p></div>';
+        return;
+      }
+      // muted=true satisfies autoplay policies; user unmutes in Twitch UI
+      var src = 'https://player.twitch.tv/?channel=' + encodeURIComponent(ch) +
+        '&' + parentQs + '&autoplay=true&muted=true';
+      var iframe = document.createElement('iframe');
+      iframe.src = src;
+      iframe.allowFullscreen = true;
+      iframe.setAttribute('allow', 'autoplay; fullscreen; encrypted-media');
+      iframe.setAttribute('frameborder', '0');
+      iframe.style.cssText = 'border:0;position:absolute;top:0;left:0;width:100%;height:100%;visibility:visible;opacity:1';
+      container.innerHTML = '';
+      container.appendChild(iframe);
+      console.log('[FNSL] twitch iframe mounted', src);
+    });
+  });
 
   // Live switcher
   try {

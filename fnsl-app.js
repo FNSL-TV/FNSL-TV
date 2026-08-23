@@ -438,24 +438,34 @@ function openStream(stream) {
     </div>`;
   }
 
+  if (!overlay || !container) {
+    if (externalUrl) window.open(externalUrl, '_blank');
+    return;
+  }
+
   container.innerHTML = embed;
   if (openLink) {
     if (externalUrl) {
       openLink.href = externalUrl;
       openLink.classList.remove('hidden');
+      openLink.style.display = '';
     } else {
       openLink.classList.add('hidden');
     }
   }
   overlay.classList.add('active');
+  overlay.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
 
 function closePlayer() {
   const overlay = document.getElementById('player-overlay');
   const container = document.getElementById('player-container');
-  overlay.classList.remove('active');
-  container.innerHTML = '';
+  if (overlay) {
+    overlay.classList.remove('active');
+    overlay.style.display = 'none';
+  }
+  if (container) container.innerHTML = '';
   document.body.style.overflow = '';
 }
 

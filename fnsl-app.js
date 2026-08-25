@@ -104,16 +104,33 @@ function startStatsSlideshow() {
     return;
   }
 
-  container.innerHTML = players.map((p, i) => `
-    <div class="stat-slide ${i === 0 ? 'active' : ''}" data-idx="${i}">
+  container.innerHTML = players.map((p, i) => {
+    // Category with top-5 list
+    if (p.leaders && p.leaders.length) {
+      const rows = p.leaders.map(L => `
+        <div class="flex items-center justify-between gap-2 py-0.5">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="text-slate-500 text-xs w-3">${L.rank}</span>
+            <span class="font-semibold text-sm truncate">${escapeHtml(L.name)}</span>
+            <span class="text-slate-500 text-xs shrink-0">${escapeHtml(L.team)}</span>
+          </div>
+          <span class="text-xs font-mono text-purple-200 shrink-0">${escapeHtml(L.stat)}</span>
+        </div>`).join('');
+      return `<div class="stat-slide ${i === 0 ? 'active' : ''}" data-idx="${i}">
+        <p class="text-xs font-bold text-purple-300 uppercase tracking-wider mb-2">${escapeHtml(p.title || p.pos || 'Leaders')}</p>
+        ${rows}
+      </div>`;
+    }
+    // Legacy single-player slide
+    return `<div class="stat-slide ${i === 0 ? 'active' : ''}" data-idx="${i}">
       <div class="flex items-baseline justify-between gap-2">
-        <span class="text-xs font-bold text-purple-300 uppercase">${escapeHtml(p.pos)}</span>
+        <span class="text-xs font-bold text-purple-300 uppercase">${escapeHtml(p.pos || '')}</span>
         <span class="text-xs text-slate-500">#${p.rank || 1}</span>
       </div>
-      <p class="font-bold text-lg leading-tight mt-1">${escapeHtml(p.name)}</p>
-      <p class="text-slate-400 text-sm">${escapeHtml(p.team)} · ${escapeHtml(p.stat)}</p>
-    </div>
-  `).join('');
+      <p class="font-bold text-lg leading-tight mt-1">${escapeHtml(p.name || '')}</p>
+      <p class="text-slate-400 text-sm">${escapeHtml(p.team || '')} · ${escapeHtml(p.stat || '')}</p>
+    </div>`;
+  }).join('');
 
   if (dots) {
     dots.innerHTML = players.map((_, i) =>

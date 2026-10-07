@@ -7,10 +7,10 @@ const FNSL_CONFIG = {
   leagueName: "Father N Son League",
   shortName: "FNSL",
   founded: "2018",
-  cycleSeason: "M27 - S1",      // current Madden cycle (update when new Madden drops)
-  currentSeason: "Season 58",   // lifetime season count (bump after each Super Bowl)
-  defendingChamp: "Jacksonville Jaguars",
-  defendingCoach: "Coach Ocinco",
+  cycleSeason: "M27 - S2",      // current Madden cycle (update when new Madden drops)
+  currentSeason: "Season 59",   // lifetime season count (bump after each Super Bowl)
+  defendingChamp: "Atlanta Falcons",
+  defendingCoach: "BWO",
 
   // =========================================================
   // SOCIAL / COMMUNITY LINKS (logo buttons on the site)
@@ -596,7 +596,8 @@ const FNSL_CONFIG = {
     { season: 54, superBowl: "LIV",   champion: "San Francisco 49ers",       runnerUp: "", score: "", mvp: "SFG WILLIE", notes: "Madden 26" },
     { season: 55, superBowl: "LV",    champion: "Detroit Lions",             runnerUp: "", score: "", mvp: "PRIMETIME", notes: "Madden 26" },
     { season: 56, superBowl: "LVI",   champion: "Las Vegas Raiders",         runnerUp: "", score: "", mvp: "MR.NOTIFICATION", notes: "Madden 26" },
-    { season: 57, superBowl: "LVII",  champion: "Jacksonville Jaguars",      runnerUp: "", score: "", mvp: "COACH OCINCO", notes: "Madden 26 – Current defending champions" }
+    { season: 57, superBowl: "LVII",  champion: "Jacksonville Jaguars",      runnerUp: "", score: "", mvp: "COACH OCINCO", notes: "Madden 26" },
+    { season: 58, superBowl: "LVIII", champion: "Atlanta Falcons",          runnerUp: "", score: "", mvp: "BWO", notes: "Madden 27 – Current defending champions" }
   ],
 
 

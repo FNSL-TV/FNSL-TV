@@ -422,81 +422,81 @@ const FNSL_CONFIG = {
     {
       title: "PASSING YARDS",
       leaders: [
-        { rank: 1, name: "Jordan Love", team: "GB", stat: "1068 YDS · 14 TD" },
-        { rank: 2, name: "Tyler Shough", team: "NO", stat: "1033 YDS · 10 TD" },
-        { rank: 3, name: "Carson Beck", team: "AZ", stat: "1012 YDS · 9 TD" },
-        { rank: 4, name: "Patrick Mahomes", team: "KC", stat: "974 YDS · 9 TD" },
-        { rank: 5, name: "Caleb Williams", team: "CHI", stat: "898 YDS · 10 TD" }
+        { rank: 1, name: "C.J. Stroud", team: "HOU", stat: "763 YDS · 7 TD" },
+        { rank: 2, name: "Antoine Redmond", team: "NYJ", stat: "683 YDS · 8 TD" },
+        { rank: 3, name: "Jordan Love", team: "GB", stat: "646 YDS · 7 TD" },
+        { rank: 4, name: "Taylen Green", team: "CLE", stat: "575 YDS · 7 TD" },
+        { rank: 5, name: "Drew Allar", team: "PIT", stat: "568 YDS · 7 TD" }
       ]
     },
     {
       title: "RUSHING YARDS",
       leaders: [
-        { rank: 1, name: "Adrian Peterson", team: "MIN", stat: "610 YDS · 7 TD" },
-        { rank: 2, name: "Ashton Jeanty", team: "CIN", stat: "335 YDS · 3 TD" },
-        { rank: 3, name: "Walter Payton", team: "CHI", stat: "296 YDS · 2 TD" },
-        { rank: 4, name: "Bucky Irving", team: "TB", stat: "290 YDS · 2 TD" },
-        { rank: 5, name: "Antonio Gibson", team: "CAR", stat: "273 YDS · 3 TD" }
+        { rank: 1, name: "Chris Johnson", team: "TEN", stat: "417 YDS · 3 TD" },
+        { rank: 2, name: "Kenneth Walker", team: "KC", stat: "359 YDS · 3 TD" },
+        { rank: 3, name: "Jeremiyah Love", team: "AZ", stat: "332 YDS · 4 TD" },
+        { rank: 4, name: "Trey Benson", team: "DEN", stat: "328 YDS · 6 TD" },
+        { rank: 5, name: "De'Von Achane", team: "MIA", stat: "323 YDS · 2 TD" }
       ]
     },
     {
       title: "RECEIVING YARDS",
       leaders: [
-        { rank: 1, name: "Bryce Lance", team: "NO", stat: "653 YDS · 8 TD" },
-        { rank: 2, name: "Trey McBride", team: "AZ", stat: "425 YDS · 3 TD" },
-        { rank: 3, name: "Andre Johnson", team: "HOU", stat: "366 YDS · 3 TD" },
-        { rank: 4, name: "Xavier Worthy", team: "KC", stat: "355 YDS · 4 TD" },
-        { rank: 5, name: "Jaxon Smith-Njigba", team: "SEA", stat: "354 YDS · 2 TD" }
+        { rank: 1, name: "Nico Collins", team: "HOU", stat: "354 YDS · 2 TD" },
+        { rank: 2, name: "Chimere Dike", team: "MIN", stat: "333 YDS · 4 TD" },
+        { rank: 3, name: "Joshua Denmark", team: "CLE", stat: "303 YDS · 5 TD" },
+        { rank: 4, name: "Kevin Santos", team: "CAR", stat: "260 YDS · 1 TD" },
+        { rank: 5, name: "Darian Donald", team: "NYJ", stat: "246 YDS · 4 TD" }
       ]
     },
     {
       title: "TE RECEIVING",
       leaders: [
-        { rank: 1, name: "Trey McBride", team: "AZ", stat: "425 YDS · 3 TD" },
-        { rank: 2, name: "Sam LaPorta", team: "DET", stat: "257 YDS · 1 TD" },
-        { rank: 3, name: "Darren Waller", team: "CAR", stat: "233 YDS · 2 TD" },
-        { rank: 4, name: "Chigoziem Okonkwo", team: "WAS", stat: "201 YDS · 1 TD" },
-        { rank: 5, name: "Mark Andrews", team: "BAL", stat: "196 YDS · 2 TD" }
+        { rank: 1, name: "Trey McBride", team: "AZ", stat: "217 YDS · 0 TD" },
+        { rank: 2, name: "Kenyon Sadiq", team: "NYJ", stat: "180 YDS · 2 TD" },
+        { rank: 3, name: "Rashawn Williams", team: "NE", stat: "170 YDS · 0 TD" },
+        { rank: 4, name: "Colston Loveland", team: "DEN", stat: "148 YDS · 1 TD" },
+        { rank: 5, name: "Marlin Klein", team: "HOU", stat: "142 YDS · 0 TD" }
       ]
     },
     {
       title: "SACKS",
       leaders: [
-        { rank: 1, name: "Jalon Walker", team: "LV", stat: "7 SACKS" },
-        { rank: 2, name: "Rueben Bain Jr.", team: "TB", stat: "5 SACKS" },
-        { rank: 3, name: "Yaya Diaby", team: "TB", stat: "4.5 SACKS" },
-        { rank: 4, name: "Milton Williams", team: "NE", stat: "4 SACKS" },
-        { rank: 5, name: "Nik Bonitto", team: "DEN", stat: "4 SACKS" }
+        { rank: 1, name: "Odafe Oweh", team: "WAS", stat: "5 SACKS" },
+        { rank: 2, name: "Arvell Reese", team: "NYG", stat: "4 SACKS" },
+        { rank: 3, name: "Nik Bonitto", team: "DEN", stat: "4 SACKS" },
+        { rank: 4, name: "Jared Verse", team: "CLE", stat: "3.5 SACKS" },
+        { rank: 5, name: "Zach Allen", team: "DEN", stat: "3.5 SACKS" }
       ]
     },
     {
       title: "INTERCEPTIONS",
       leaders: [
-        { rank: 1, name: "Wade Woodaz", team: "HOU", stat: "4 INT" },
-        { rank: 2, name: "C.J. Gardner-Johnson", team: "BUF", stat: "4 INT" },
-        { rank: 3, name: "Bud Clark", team: "SEA", stat: "4 INT" },
-        { rank: 4, name: "DJ Turner II", team: "CIN", stat: "3 INT" },
-        { rank: 5, name: "Denzel Ward", team: "CLE", stat: "3 INT" }
+        { rank: 1, name: "Kyle Hamilton", team: "BAL", stat: "3 INT" },
+        { rank: 2, name: "Trey Amos", team: "WAS", stat: "3 INT" },
+        { rank: 3, name: "DeAndre Hardwick", team: "KC", stat: "2 INT" },
+        { rank: 4, name: "Jailin Walker", team: "AZ", stat: "2 INT" },
+        { rank: 5, name: "Jessie Bates III", team: "ATL", stat: "2 INT" }
       ]
     },
     {
       title: "TACKLES",
       leaders: [
-        { rank: 1, name: "Nakobe Dean", team: "LV", stat: "20 TKL" },
-        { rank: 2, name: "Quay Walker", team: "LV", stat: "20 TKL" },
-        { rank: 3, name: "Joe Haden", team: "CLE", stat: "19 TKL" },
-        { rank: 4, name: "Carson Schwesinger", team: "CLE", stat: "19 TKL" },
-        { rank: 5, name: "Tyrel Dodson", team: "MIA", stat: "18 TKL" }
+        { rank: 1, name: "Foyesade Oluokun", team: "JAX", stat: "16 TKL" },
+        { rank: 2, name: "Josiah Trotter", team: "TB", stat: "14 TKL" },
+        { rank: 3, name: "Carlos Callahan", team: "NO", stat: "13 TKL" },
+        { rank: 4, name: "Deon Green", team: "WAS", stat: "13 TKL" },
+        { rank: 5, name: "Byron Murphy Jr", team: "BUF", stat: "12 TKL" }
       ]
     },
     {
       title: "KICKING",
       leaders: [
-        { rank: 1, name: "Harrison Butker", team: "KC", stat: "6/6 FG" },
-        { rank: 2, name: "Dominic Zvada", team: "NYG", stat: "6/6 FG" },
-        { rank: 3, name: "Joey Slye", team: "TEN", stat: "5/5 FG" },
-        { rank: 4, name: "Wil Lutz", team: "DEN", stat: "5/5 FG" },
-        { rank: 5, name: "Chad Ryland", team: "AZ", stat: "5/5 FG" }
+        { rank: 1, name: "Brandon Aubrey", team: "DAL", stat: "4/4 FG" },
+        { rank: 2, name: "Joshua Karty", team: "CHI", stat: "4/4 FG" },
+        { rank: 3, name: "Trey Smack", team: "GB", stat: "4/4 FG" },
+        { rank: 4, name: "Ben Tolbert", team: "DET", stat: "3/3 FG" },
+        { rank: 5, name: "Chase McLaughlin", team: "NYJ", stat: "3/3 FG" }
       ]
     }
   ],

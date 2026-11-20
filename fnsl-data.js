@@ -462,7 +462,7 @@ const FNSL_CONFIG = {
     {
       title: "SACKS",
       leaders: [
-        { rank: 1, name: "Jalon Walker", team: "ATL", stat: "7 SACKS" },
+        { rank: 1, name: "Jalon Walker", team: "LV", stat: "7 SACKS" },
         { rank: 2, name: "Rueben Bain Jr.", team: "TB", stat: "5 SACKS" },
         { rank: 3, name: "Yaya Diaby", team: "TB", stat: "4.5 SACKS" },
         { rank: 4, name: "Milton Williams", team: "NE", stat: "4 SACKS" },

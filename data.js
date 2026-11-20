@@ -68,6 +68,7 @@ const FNSL_CONFIG = {
     "sanchez_717",
     "youngmosesgaming",
     "raywalkertv",
+    "jaysixz",
     "beans6613",
     "iambwo4life",
     "th30nlyeagle",
@@ -245,6 +246,14 @@ const FNSL_CONFIG = {
       owner: "Benny0972 (Owner / Coach)",
       platform: "twitch",
       channel: "raywalkertv",
+      isLive: false
+    },
+    {
+      id: "49ers",
+      title: "San Francisco 49ers • Stream",
+      owner: "JaySixz (Owner / Coach)",
+      platform: "twitch",
+      channel: "jaysixz",
       isLive: false
     },
     {

@@ -729,7 +729,7 @@ function renderHistory() {
         <td class="px-5 py-4 font-bold text-green-400">${escapeHtml(h.champion)}</td>
         <td class="px-5 py-4 text-slate-300">${escapeHtml(h.runnerUp || '—')}</td>
         <td class="px-5 py-4 font-mono">${escapeHtml(h.score || '—')}</td>
-        <td class="px-5 py-4 text-sm text-slate-400">${escapeHtml(h.mvp || h.notes || '')}</td>
+        <td class="px-5 py-4 text-sm text-slate-400">${escapeHtml(h.coach || h.mvp || '')}</td>
       `;
       tbody.appendChild(tr);
     });

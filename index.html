@@ -551,6 +551,15 @@
           </div>
         </div>
 
+        <!-- Super Bowl banners -->
+        <div class="mt-10">
+          <h3 class="text-2xl font-bold mb-1">Super Bowl Banners</h3>
+          <p class="text-slate-400 text-sm mb-4">Tap a banner to view it full size.</p>
+          <div id="banner-gallery" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
         <!-- All-time leaders -->
         <div class="mt-10">
           <h3 class="text-2xl font-bold mb-4">All-Time Titles</h3>
@@ -616,6 +625,16 @@
       <p class="mt-1">Works on phones, tablets, computers &amp; TVs</p>
     </div>
   </footer>
+
+
+  <!-- Banner lightbox -->
+  <div id="banner-lightbox" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/90 p-4" onclick="closeBanner()">
+    <button class="absolute top-4 right-4 text-white text-3xl font-bold leading-none" aria-label="Close" onclick="closeBanner()">&times;</button>
+    <figure class="max-w-6xl w-full" onclick="event.stopPropagation()">
+      <img id="banner-lightbox-img" src="" alt="" class="w-full max-h-[80vh] object-contain rounded-xl" />
+      <figcaption id="banner-lightbox-caption" class="text-center text-slate-200 font-semibold mt-3"></figcaption>
+    </figure>
+  </div>
 
   <script src="fnsl-data.js"></script>
   <script src="fnsl-app.js"></script>

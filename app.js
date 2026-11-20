@@ -704,6 +704,51 @@ function openVod(vod) {
   }
 }
 
+// ---------- SUPER BOWL BANNERS ----------
+// Add  banner: "banners/sb-59.png"  to any FNSL_CONFIG.history entry (PNG or JPG in /banners)
+function renderBanners(history) {
+  const grid = document.getElementById('banner-gallery');
+  if (!grid) return;
+  grid.innerHTML = '';
+  const withBanners = history.filter(h => h.banner);
+  if (withBanners.length === 0) {
+    grid.innerHTML = `<p class="col-span-full text-slate-400">Banners coming soon.</p>`;
+    return;
+  }
+  withBanners.forEach(h => {
+    const caption = `Season ${h.season} · SB ${h.superBowl || h.season} · ${h.champion}`;
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'group text-left rounded-2xl border border-slate-800 bg-fnsl-card overflow-hidden hover:border-amber-400 transition focus:outline-none focus:ring-2 focus:ring-amber-400';
+    card.innerHTML = `
+      <div class="aspect-video bg-slate-900 overflow-hidden">
+        <img src="${escapeHtml(h.banner)}" alt="${escapeHtml(caption)}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+      </div>
+      <div class="px-4 py-3">
+        <p class="text-amber-400 font-bold text-sm">SB ${escapeHtml(String(h.superBowl || h.season))} · Season ${h.season}</p>
+        <p class="font-semibold">${escapeHtml(h.champion)}</p>
+      </div>`;
+    card.addEventListener('click', () => openBanner(h.banner, caption));
+    grid.appendChild(card);
+  });
+}
+
+function openBanner(src, caption) {
+  const box = document.getElementById('banner-lightbox');
+  document.getElementById('banner-lightbox-img').src = src;
+  document.getElementById('banner-lightbox-img').alt = caption;
+  document.getElementById('banner-lightbox-caption').textContent = caption;
+  box.classList.remove('hidden');
+  box.classList.add('flex');
+}
+
+function closeBanner() {
+  const box = document.getElementById('banner-lightbox');
+  if (!box) return;
+  box.classList.add('hidden');
+  box.classList.remove('flex');
+}
+
 // ---------- HISTORY ----------
 function renderHistory() {
   const tbody = document.getElementById('history-tbody');
@@ -734,6 +779,8 @@ function renderHistory() {
       tbody.appendChild(tr);
     });
   }
+
+  renderBanners(history);
 
   const leaderboard = document.getElementById('titles-leaderboard');
   leaderboard.innerHTML = '';
@@ -942,7 +989,7 @@ function renderConf(conf, teams) {
 // ---------- TV / KEYBOARD NAV ----------
 function setupKeyboardNav() {
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closePlayer();
+    if (e.key === 'Escape') { closePlayer(); closeBanner(); }
     if (e.key === '1') showSection('live');
     if (e.key === '2') showSection('vods');
     if (e.key === '3') showSection('history');

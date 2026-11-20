@@ -721,8 +721,8 @@ function renderBanners(history) {
     card.type = 'button';
     card.className = 'group text-left rounded-2xl border border-slate-800 bg-fnsl-card overflow-hidden hover:border-amber-400 transition focus:outline-none focus:ring-2 focus:ring-amber-400';
     card.innerHTML = `
-      <div class="aspect-video bg-slate-900 overflow-hidden">
-        <img src="${escapeHtml(h.banner)}" alt="${escapeHtml(caption)}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+      <div class="aspect-[2/3] bg-slate-900/60 overflow-hidden p-2">
+        <img src="${escapeHtml(h.banner)}" alt="${escapeHtml(caption)}" loading="lazy" class="w-full h-full object-contain group-hover:scale-105 transition duration-300" />
       </div>
       <div class="px-4 py-3">
         <p class="text-amber-400 font-bold text-sm">SB ${escapeHtml(String(h.superBowl || h.season))} · Season ${h.season}</p>

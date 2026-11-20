@@ -534,13 +534,13 @@ const FNSL_CONFIG = {
     { season: 21, superBowl: "XXI",  champion: "Arizona Cardinals",          runnerUp: "", score: "", mvp: "TR904", notes: "Madden 21", banner: "banners/sb-21.svg" },
 
     // Madden 22
-    { season: 22, superBowl: "XXII", champion: "Detroit Lions",              runnerUp: "", score: "", mvp: "MrMonarch", notes: "Madden 22" },
-    { season: 23, superBowl: "XXIII",champion: "Kansas City Chiefs",         runnerUp: "", score: "", mvp: "DEllis19", notes: "Madden 22" },
-    { season: 24, superBowl: "XXIV", champion: "Pittsburgh Steelers",        runnerUp: "", score: "", mvp: "COUNTRYSWAG77", notes: "Madden 22" },
-    { season: 25, superBowl: "XXV",  champion: "Minnesota Vikings",          runnerUp: "", score: "", mvp: "COOP", notes: "Madden 22" },
-    { season: 26, superBowl: "XXVI", champion: "Minnesota Vikings",          runnerUp: "", score: "", mvp: "COOP", notes: "Madden 22" },
-    { season: 27, superBowl: "XXVII",champion: "Minnesota Vikings",          runnerUp: "", score: "", mvp: "COOP", notes: "Madden 22" },
-    { season: 28, superBowl: "XXVIII",champion: "Minnesota Vikings",         runnerUp: "", score: "", mvp: "COOP", notes: "Madden 22 – 4-peat" },
+    { season: 22, superBowl: "XXII", champion: "Detroit Lions",              runnerUp: "", score: "", mvp: "MR MONARCH1323", notes: "Madden 22", banner: "banners/sb-22.svg" },
+    { season: 23, superBowl: "XXIII",champion: "Kansas City Chiefs",         runnerUp: "", score: "", mvp: "DELLIS19", notes: "Madden 22", banner: "banners/sb-23.svg" },
+    { season: 24, superBowl: "XXIV", champion: "Pittsburgh Steelers",        runnerUp: "", score: "", mvp: "COUNTRYSWAG77", notes: "Madden 22", banner: "banners/sb-24.svg" },
+    { season: 25, superBowl: "XXV",  champion: "Minnesota Vikings",          runnerUp: "", score: "", mvp: "KENNYCOOP", notes: "Madden 22", banner: "banners/sb-25.svg" },
+    { season: 26, superBowl: "XXVI", champion: "Minnesota Vikings",          runnerUp: "", score: "", mvp: "KENNYCOOP", notes: "Madden 22 – back-to-back", banner: "banners/sb-26.svg" },
+    { season: 27, superBowl: "XXVII",champion: "Minnesota Vikings",          runnerUp: "", score: "", mvp: "KENNYCOOP", notes: "Madden 22 – 3-peat", banner: "banners/sb-27.svg" },
+    { season: 28, superBowl: "XXVIII",champion: "Minnesota Vikings",         runnerUp: "", score: "", mvp: "KENNYCOOP", notes: "Madden 22 – 4-peat", banner: "banners/sb-28.svg" },
 
     // Madden 23
     { season: 29, superBowl: "XXIX", champion: "Cincinnati Bengals",         runnerUp: "", score: "", mvp: "BWO", notes: "Madden 23" },

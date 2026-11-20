@@ -505,14 +505,14 @@ const FNSL_CONFIG = {
     { season: 5,  superBowl: "V",   champion: "Jacksonville Jaguars",        runnerUp: "", score: "", mvp: "YOUNGMOSESDMG", notes: "Madden 19", banner: "banners/sb-5.svg" },
 
     // Madden 20
-    { season: 6,  superBowl: "VI",   champion: "Cleveland Browns",           runnerUp: "", score: "", mvp: "CHUCKESMILES", notes: "Madden 20" },
-    { season: 7,  superBowl: "VII",  champion: "Green Bay Packers",          runnerUp: "", score: "", mvp: "JUDAH BES", notes: "Madden 20" },
-    { season: 8,  superBowl: "VIII", champion: "Miami Dolphins",             runnerUp: "", score: "", mvp: "DEBARGE 313", notes: "Madden 20" },
-    { season: 9,  superBowl: "IX",   champion: "Seattle Seahawks",           runnerUp: "", score: "", mvp: "JACK.FLANIGAN13", notes: "Madden 20" },
-    { season: 10, superBowl: "X",    champion: "Seattle Seahawks",           runnerUp: "", score: "", mvp: "JACK.FLANIGAN13", notes: "Madden 20 – back-to-back" },
-    { season: 11, superBowl: "XI",   champion: "Los Angeles Chargers",       runnerUp: "", score: "", mvp: "EATW3LL", notes: "Madden 20" },
-    { season: 12, superBowl: "XII",  champion: "Seattle Seahawks",           runnerUp: "", score: "", mvp: "TWAN ZOOTED", notes: "Madden 20" },
-    { season: 13, superBowl: "XIII", champion: "Philadelphia Eagles",        runnerUp: "", score: "", mvp: "EATW3LL", notes: "Madden 20" },
+    { season: 6,  superBowl: "VI",   champion: "Cleveland Browns",           runnerUp: "", score: "", mvp: "CHUCKESMILES", notes: "Madden 20", banner: "banners/sb-6.svg" },
+    { season: 7,  superBowl: "VII",  champion: "Green Bay Packers",          runnerUp: "", score: "", mvp: "JUDAH BES", notes: "Madden 20", banner: "banners/sb-7.svg" },
+    { season: 8,  superBowl: "VIII", champion: "Miami Dolphins",             runnerUp: "", score: "", mvp: "DEBARGE 313", notes: "Madden 20", banner: "banners/sb-8.svg" },
+    { season: 9,  superBowl: "IX",   champion: "Seattle Seahawks",           runnerUp: "", score: "", mvp: "JACK.FLANIGAN13", notes: "Madden 20", banner: "banners/sb-9.svg" },
+    { season: 10, superBowl: "X",    champion: "Seattle Seahawks",           runnerUp: "", score: "", mvp: "JACK.FLANIGAN13", notes: "Madden 20 – back-to-back", banner: "banners/sb-10.svg" },
+    { season: 11, superBowl: "XI",   champion: "Los Angeles Chargers",       runnerUp: "", score: "", mvp: "EATW3LL", notes: "Madden 20", banner: "banners/sb-11.svg" },
+    { season: 12, superBowl: "XII",  champion: "Seattle Seahawks",           runnerUp: "", score: "", mvp: "TWAN ZOOTED", notes: "Madden 20", banner: "banners/sb-12.svg" },
+    { season: 13, superBowl: "XIII", champion: "Philadelphia Eagles",        runnerUp: "", score: "", mvp: "EATW3LL", notes: "Madden 20", banner: "banners/sb-13.svg" },
 
     // Madden 21
     { season: 14, superBowl: "XIV",  champion: "Dallas Cowboys",             runnerUp: "", score: "", mvp: "PATS8312", notes: "Madden 21" },

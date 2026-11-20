@@ -571,15 +571,15 @@ const FNSL_CONFIG = {
     { season: 50, superBowl: "L",     champion: "Denver Broncos",            runnerUp: "", score: "", mvp: "MR.NOTIFICATION", notes: "Madden 25", banner: "banners/sb-50.svg" },
 
     // Madden 26
-    { season: 51, superBowl: "LI",    champion: "New York Giants",           runnerUp: "", score: "", mvp: "SMOKIE", notes: "Madden 26" },
-    { season: 52, superBowl: "LII",   champion: "New York Giants",           runnerUp: "", score: "", mvp: "SMOKIE", notes: "Madden 26" },
-    { season: 53, superBowl: "LIII",  champion: "Baltimore Ravens",          runnerUp: "", score: "", mvp: "BWO", notes: "Madden 26" },
-    { season: 54, superBowl: "LIV",   champion: "San Francisco 49ers",       runnerUp: "", score: "", mvp: "SFG WILLIE", notes: "Madden 26" },
-    { season: 55, superBowl: "LV",    champion: "Detroit Lions",             runnerUp: "", score: "", mvp: "PRIMETIME", notes: "Madden 26" },
-    { season: 56, superBowl: "LVI",   champion: "Las Vegas Raiders",         runnerUp: "", score: "", mvp: "MR.NOTIFICATION", notes: "Madden 26" },
-    { season: 57, superBowl: "LVII",  champion: "Jacksonville Jaguars",      runnerUp: "", score: "", mvp: "COACH OCINCO", notes: "Madden 26" },
-    { season: 58, superBowl: "LVIII", champion: "Atlanta Falcons",          runnerUp: "", score: "", mvp: "BWO", notes: "Madden 27" },
-    { season: 59, superBowl: "LIX",   champion: "Atlanta Falcons",          runnerUp: "New England Patriots", score: "27-24", mvp: "BWO", notes: "Madden 27 – Current defending champions" }
+    { season: 51, superBowl: "LI",    champion: "New York Giants",           runnerUp: "", score: "", mvp: "SMOKIE", notes: "Madden 26", banner: "banners/sb-51.svg" },
+    { season: 52, superBowl: "LII",   champion: "New York Giants",           runnerUp: "", score: "", mvp: "SMOKIE", notes: "Madden 26 – back-to-back", banner: "banners/sb-52.svg" },
+    { season: 53, superBowl: "LIII",  champion: "Baltimore Ravens",          runnerUp: "", score: "", mvp: "BWO", notes: "Madden 26", banner: "banners/sb-53.svg" },
+    { season: 54, superBowl: "LIV",   champion: "San Francisco 49ers",       runnerUp: "", score: "", mvp: "SFG WILLIE", notes: "Madden 26", banner: "banners/sb-54.svg" },
+    { season: 55, superBowl: "LV",    champion: "Detroit Lions",             runnerUp: "", score: "", mvp: "PRIMETIME", notes: "Madden 26", banner: "banners/sb-55.svg" },
+    { season: 56, superBowl: "LVI",   champion: "Las Vegas Raiders",         runnerUp: "", score: "", mvp: "MR.NOTIFICATION", notes: "Madden 26", banner: "banners/sb-56.svg" },
+    { season: 57, superBowl: "LVII",  champion: "Jacksonville Jaguars",      runnerUp: "", score: "", mvp: "COACH OCINCO", notes: "Madden 26", banner: "banners/sb-57.svg" },
+    { season: 58, superBowl: "LVIII", champion: "Atlanta Falcons",          runnerUp: "", score: "", mvp: "BWO", notes: "Madden 27", banner: "banners/sb-58.svg" },
+    { season: 59, superBowl: "LIX",   champion: "Atlanta Falcons",          runnerUp: "New England Patriots", score: "27-24", mvp: "BWO", notes: "Madden 27 – back-to-back, current defending champions", banner: "banners/sb-59.svg" }
   ],
 
 

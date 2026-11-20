@@ -510,7 +510,7 @@ const FNSL_CONFIG = {
     { season: 8,  superBowl: "VIII", champion: "Miami Dolphins",             runnerUp: "", score: "", mvp: "DEBARGE 313", notes: "Madden 20", banner: "banners/sb-8.svg" },
     { season: 9,  superBowl: "IX",   champion: "Seattle Seahawks",           runnerUp: "", score: "", mvp: "JACK.FLANAGAN13", notes: "Madden 20", banner: "banners/sb-9.svg" },
     { season: 10, superBowl: "X",    champion: "Seattle Seahawks",           runnerUp: "", score: "", mvp: "JACK.FLANAGAN13", notes: "Madden 20 – back-to-back", banner: "banners/sb-10.svg" },
-    { season: 11, superBowl: "XI",   champion: "Los Angeles Chargers",       runnerUp: "", score: "", mvp: "EATW3LL", notes: "Madden 20", banner: "banners/sb-11.svg" },
+    { season: 11, superBowl: "XI",   champion: "Condors",                    runnerUp: "", score: "", mvp: "EATW3LL", notes: "Madden 20", banner: "banners/sb-11.svg" },
     { season: 12, superBowl: "XII",  champion: "Seattle Seahawks",           runnerUp: "", score: "", mvp: "TWAN ZOOTED", notes: "Madden 20", banner: "banners/sb-12.svg" },
     { season: 13, superBowl: "XIII", champion: "Philadelphia Eagles",        runnerUp: "", score: "", mvp: "EATW3LL", notes: "Madden 20", banner: "banners/sb-13.svg" },
 

@@ -510,7 +510,7 @@ const FNSL_CONFIG = {
     { season: 8,  superBowl: "VIII", champion: "Miami Dolphins",             runnerUp: "", score: "", mvp: "DEBARGE 313", notes: "Madden 20", banner: "banners/sb-8.svg" },
     { season: 9,  superBowl: "IX",   champion: "Seattle Seahawks",           runnerUp: "", score: "", mvp: "JACK.FLANAGAN13", notes: "Madden 20", banner: "banners/sb-9.svg" },
     { season: 10, superBowl: "X",    champion: "Seattle Seahawks",           runnerUp: "", score: "", mvp: "JACK.FLANAGAN13", notes: "Madden 20 – back-to-back", banner: "banners/sb-10.svg" },
-    { season: 11, superBowl: "XI",   champion: "Condors",                    runnerUp: "", score: "", mvp: "EATW3LL", notes: "Madden 20", banner: "banners/sb-11.svg" },
+    { season: 11, superBowl: "XI",   champion: "Condors", titleTeam: "Los Angeles Chargers", runnerUp: "", score: "", mvp: "EATW3LL", notes: "Madden 20", banner: "banners/sb-11.svg" },
     { season: 12, superBowl: "XII",  champion: "Seattle Seahawks",           runnerUp: "", score: "", mvp: "TWAN ZOOTED", notes: "Madden 20", banner: "banners/sb-12.svg" },
     { season: 13, superBowl: "XIII", champion: "Philadelphia Eagles",        runnerUp: "", score: "", mvp: "EATW3LL", notes: "Madden 20", banner: "banners/sb-13.svg" },
 
@@ -714,7 +714,8 @@ const FNSL_CONFIG = {
 function getTitleCounts() {
   const counts = {};
   FNSL_CONFIG.history.forEach(h => {
-    counts[h.champion] = (counts[h.champion] || 0) + 1;
+    const team = h.titleTeam || h.champion;
+    counts[team] = (counts[team] || 0) + 1;
   });
   return Object.entries(counts)
     .sort((a, b) => b[1] - a[1])

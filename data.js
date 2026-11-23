@@ -378,11 +378,11 @@ const FNSL_CONFIG = {
   // =========================================================
   tickerItems: [
     { type: "note", text: "FNSL M27-S3 Week 4 — Watch live on FNSL.TV" },
-    { type: "note", text: "AFC leader: Tennessee Titans (3-0)" },
+    { type: "note", text: "AFC leader: Tennessee Titans (4-0)" },
     { type: "note", text: "NFC leader: Green Bay Packers (4-0)" },
-    { type: "final", text: "WK3 Titans 36 @ Browns 30" },
     { type: "final", text: "WK3 Raiders 21 @ Falcons 24" },
     { type: "final", text: "WK3 Eagles 24 @ Jaguars 10" },
+    { type: "final", text: "WK3 Titans 36 @ Browns 30" },
     { type: "final", text: "WK3 Packers 24 @ Cowboys 10" },
     { type: "final", text: "WK3 Ravens 35 @ Steelers 30" },
     { type: "final", text: "WK3 Buccaneers 31 @ Saints 0" },
@@ -397,12 +397,10 @@ const FNSL_CONFIG = {
     { type: "final", text: "WK3 Giants 30 @ Lions 25" },
     { type: "final", text: "WK3 Seahawks 42 @ Cardinals 52" },
     { type: "upcoming", text: "WK4 Colts @ Bears" },
-    { type: "upcoming", text: "WK4 Saints @ Falcons" },
-    { type: "upcoming", text: "WK4 Bengals @ Browns" },
     { type: "upcoming", text: "WK4 Chiefs @ Patriots" },
     { type: "upcoming", text: "WK4 49ers @ Dolphins" },
-    { type: "upcoming", text: "WK4 Cowboys @ Titans" },
     { type: "upcoming", text: "WK4 Seahawks @ Rams" },
+    { type: "upcoming", text: "WK4 Bengals @ Browns" },
     { type: "upcoming", text: "WK4 Cardinals @ Buccaneers" },
     { type: "upcoming", text: "WK4 Commanders @ Texans" },
     { type: "upcoming", text: "WK4 Lions @ Jaguars" },
@@ -426,8 +424,8 @@ const FNSL_CONFIG = {
     {
       title: "RUSHING YARDS",
       leaders: [
-        { rank: 1, name: "Adrian Peterson", team: "MIN", stat: "705 YDS · 10 TD" },
-        { rank: 2, name: "Chris Johnson", team: "TEN", stat: "678 YDS · 6 TD" },
+        { rank: 1, name: "Chris Johnson", team: "TEN", stat: "936 YDS · 10 TD" },
+        { rank: 2, name: "Adrian Peterson", team: "MIN", stat: "705 YDS · 10 TD" },
         { rank: 3, name: "Trey Benson", team: "DEN", stat: "595 YDS · 7 TD" },
         { rank: 4, name: "Jeremiyah Love", team: "AZ", stat: "542 YDS · 4 TD" },
         { rank: 5, name: "De'Von Achane", team: "MIA", stat: "420 YDS · 2 TD" }
@@ -478,9 +476,9 @@ const FNSL_CONFIG = {
       leaders: [
         { rank: 1, name: "Daiyan Henley", team: "LAC", stat: "25 TKL" },
         { rank: 2, name: "Foyesade Oluokun", team: "JAX", stat: "24 TKL" },
-        { rank: 3, name: "Jevon Holland", team: "NYG", stat: "19 TKL" },
-        { rank: 4, name: "Antonio Cromartie", team: "LAC", stat: "18 TKL" },
-        { rank: 5, name: "Carlos Callahan", team: "NO", stat: "18 TKL" }
+        { rank: 3, name: "Lorenzo Styles Jr.", team: "NO", stat: "22 TKL" },
+        { rank: 4, name: "Carlos Callahan", team: "NO", stat: "19 TKL" },
+        { rank: 5, name: "Jevon Holland", team: "NYG", stat: "19 TKL" }
       ]
     },
     {
@@ -608,7 +606,7 @@ const FNSL_CONFIG = {
       name: "AFC South",
       conference: "AFC",
       teams: [
-        { rank: 1, team: "Tennessee Titans", record: "3-0", owner: "TheCoachoCinco" },
+        { rank: 1, team: "Tennessee Titans", record: "4-0", owner: "TheCoachoCinco" },
         { rank: 2, team: "Houston Texans", record: "2-1", owner: "HighlyAnti" },
         { rank: 3, team: "Jacksonville Jaguars", record: "0-3", owner: "" },
         { rank: 4, team: "Indianapolis Colts", record: "0-3", owner: "" },
@@ -633,7 +631,7 @@ const FNSL_CONFIG = {
         { rank: 1, team: "Washington Commanders", record: "2-1", owner: "" },
         { rank: 2, team: "New York Giants", record: "2-1-1", owner: "Mr smokie11" },
         { rank: 3, team: "Philadelphia Eagles", record: "1-2-1", owner: "stu07172008" },
-        { rank: 4, team: "Dallas Cowboys", record: "1-2", owner: "columbuskid614" },
+        { rank: 4, team: "Dallas Cowboys", record: "1-3", owner: "columbuskid614" },
       ]
     },
     {
@@ -652,10 +650,10 @@ const FNSL_CONFIG = {
       name: "NFC South",
       conference: "NFC",
       teams: [
-        { rank: 1, team: "Carolina Panthers", record: "2-2", owner: "CountrySwag77" },
-        { rank: 2, team: "Atlanta Falcons", record: "1-2", owner: "IamBwo4life" },
-        { rank: 3, team: "New Orleans Saints", record: "1-2", owner: "amazingcar678" },
-        { rank: 4, team: "Tampa Bay Buccaneers", record: "1-2", owner: "PSB Beans66" },
+        { rank: 1, team: "Atlanta Falcons", record: "2-2", owner: "IamBwo4life" },
+        { rank: 2, team: "Carolina Panthers", record: "2-2", owner: "CountrySwag77" },
+        { rank: 3, team: "Tampa Bay Buccaneers", record: "1-2", owner: "PSB Beans66" },
+        { rank: 4, team: "New Orleans Saints", record: "1-3", owner: "amazingcar678" },
       ]
     },
     {
@@ -675,17 +673,17 @@ const FNSL_CONFIG = {
   // =========================================================
   standings: {
     afc: [
-      { team: "Tennessee Titans", record: "3-0", owner: "TheCoachoCinco" },
+      { team: "Tennessee Titans", record: "4-0", owner: "TheCoachoCinco" },
       { team: "New England Patriots", record: "3-0", owner: "primetimefs2" },
+      { team: "Los Angeles Chargers", record: "3-1", owner: "PSB Rhyno" },
       { team: "Buffalo Bills", record: "3-1", owner: "LordWill76358" },
       { team: "Baltimore Ravens", record: "3-1", owner: "firemadman" },
-      { team: "Los Angeles Chargers", record: "3-1", owner: "PSB Rhyno" },
       { team: "Denver Broncos", record: "3-1", owner: "vurmiciousknid" },
       { team: "Houston Texans", record: "2-1", owner: "HighlyAnti" },
       { team: "Kansas City Chiefs", record: "2-1", owner: "TR904" },
       { team: "Cleveland Browns", record: "2-1", owner: "MotorsportkingF" },
-      { team: "Cincinnati Bengals", record: "1-2", owner: "CoconutHawk" },
       { team: "Miami Dolphins", record: "1-2", owner: "Coolcam 1324" },
+      { team: "Cincinnati Bengals", record: "1-2", owner: "CoconutHawk" },
       { team: "New York Jets", record: "1-3", owner: "YoungMosesTV" },
       { team: "Jacksonville Jaguars", record: "0-3", owner: "" },
       { team: "Indianapolis Colts", record: "0-3", owner: "" },
@@ -699,14 +697,14 @@ const FNSL_CONFIG = {
       { team: "Washington Commanders", record: "2-1", owner: "" },
       { team: "Chicago Bears", record: "2-1", owner: "Chopworld_" },
       { team: "New York Giants", record: "2-1-1", owner: "Mr smokie11" },
+      { team: "Atlanta Falcons", record: "2-2", owner: "IamBwo4life" },
       { team: "Carolina Panthers", record: "2-2", owner: "CountrySwag77" },
       { team: "Philadelphia Eagles", record: "1-2-1", owner: "stu07172008" },
-      { team: "Atlanta Falcons", record: "1-2", owner: "IamBwo4life" },
-      { team: "New Orleans Saints", record: "1-2", owner: "amazingcar678" },
-      { team: "Dallas Cowboys", record: "1-2", owner: "columbuskid614" },
       { team: "San Francisco 49ers", record: "1-2", owner: "Jay Sixz" },
       { team: "Seattle Seahawks", record: "1-2", owner: "" },
       { team: "Tampa Bay Buccaneers", record: "1-2", owner: "PSB Beans66" },
+      { team: "Dallas Cowboys", record: "1-3", owner: "columbuskid614" },
+      { team: "New Orleans Saints", record: "1-3", owner: "amazingcar678" },
       { team: "Detroit Lions", record: "0-3", owner: "BryceLovesJesus" },
       { team: "Los Angeles Rams", record: "0-3", owner: "" }
     ]

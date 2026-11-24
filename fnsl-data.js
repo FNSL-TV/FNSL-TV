@@ -378,8 +378,8 @@ const FNSL_CONFIG = {
   // =========================================================
   tickerItems: [
     { type: "note", text: "FNSL M27-S3 Week 5 — Watch live on FNSL.TV" },
-    { type: "note", text: "AFC leader: Tennessee Titans (4-0)" },
-    { type: "note", text: "NFC leader: Green Bay Packers (4-0)" },
+    { type: "note", text: "AFC leader: Tennessee Titans (5-0)" },
+    { type: "note", text: "NFC leader: Minnesota Vikings (4-0)" },
     { type: "final", text: "WK4 Colts 13 @ Bears 27" },
     { type: "final", text: "WK4 Vikings 54 @ Giants 52" },
     { type: "final", text: "WK4 Chiefs 28 @ Patriots 20" },
@@ -399,18 +399,17 @@ const FNSL_CONFIG = {
     { type: "upcoming", text: "WK5 Seahawks @ Jets" },
     { type: "upcoming", text: "WK5 Chiefs @ Saints" },
     { type: "upcoming", text: "WK5 Packers @ Commanders" },
-    { type: "upcoming", text: "WK5 Jaguars @ Titans" },
     { type: "upcoming", text: "WK5 Cardinals @ Patriots" },
     { type: "upcoming", text: "WK5 Giants @ Colts" },
     { type: "upcoming", text: "WK5 Bills @ Dolphins" },
     { type: "upcoming", text: "WK5 Broncos @ Falcons" },
-    { type: "upcoming", text: "WK5 Steelers @ Bengals" },
     { type: "upcoming", text: "WK5 Lions @ Vikings" },
-    { type: "upcoming", text: "WK5 49ers @ Rams" },
-    { type: "upcoming", text: "WK5 Chargers @ Raiders" },
     { type: "upcoming", text: "WK5 Browns @ Ravens" },
     { type: "upcoming", text: "WK5 Cowboys @ Eagles" },
     { type: "upcoming", text: "WK5 Bears @ Texans" },
+    { type: "upcoming", text: "WK5 Steelers @ Bengals" },
+    { type: "upcoming", text: "WK5 49ers @ Rams" },
+    { type: "upcoming", text: "WK5 Chargers @ Raiders" },
     { type: "note", text: "Defending champ: Atlanta Falcons · BWO" }
   ],
 
@@ -431,7 +430,7 @@ const FNSL_CONFIG = {
     {
       title: "RUSHING YARDS",
       leaders: [
-        { rank: 1, name: "Chris Johnson", team: "TEN", stat: "936 YDS · 10 TD" },
+        { rank: 1, name: "Chris Johnson", team: "TEN", stat: "1061 YDS · 11 TD" },
         { rank: 2, name: "Adrian Peterson", team: "MIN", stat: "705 YDS · 10 TD" },
         { rank: 3, name: "Trey Benson", team: "DEN", stat: "595 YDS · 7 TD" },
         { rank: 4, name: "Jeremiyah Love", team: "AZ", stat: "595 YDS · 4 TD" },
@@ -481,11 +480,11 @@ const FNSL_CONFIG = {
     {
       title: "TACKLES",
       leaders: [
-        { rank: 1, name: "Foyesade Oluokun", team: "JAX", stat: "33 TKL" },
-        { rank: 2, name: "Trenton Simpson", team: "NE", stat: "27 TKL" },
-        { rank: 3, name: "Josiah Trotter", team: "TB", stat: "26 TKL" },
-        { rank: 4, name: "Daiyan Henley", team: "LAC", stat: "25 TKL" },
-        { rank: 5, name: "Kamren Kinchens", team: "JAX", stat: "24 TKL" }
+        { rank: 1, name: "Foyesade Oluokun", team: "JAX", stat: "39 TKL" },
+        { rank: 2, name: "Kamren Kinchens", team: "JAX", stat: "29 TKL" },
+        { rank: 3, name: "Trenton Simpson", team: "NE", stat: "27 TKL" },
+        { rank: 4, name: "Josiah Trotter", team: "TB", stat: "26 TKL" },
+        { rank: 5, name: "Daiyan Henley", team: "LAC", stat: "25 TKL" }
       ]
     },
     {
@@ -613,10 +612,10 @@ const FNSL_CONFIG = {
       name: "AFC South",
       conference: "AFC",
       teams: [
-        { rank: 1, team: "Tennessee Titans", record: "4-0", owner: "TheCoachoCinco" },
+        { rank: 1, team: "Tennessee Titans", record: "5-0", owner: "TheCoachoCinco" },
         { rank: 2, team: "Houston Texans", record: "3-1", owner: "HighlyAnti" },
         { rank: 3, team: "Indianapolis Colts", record: "0-4", owner: "" },
-        { rank: 4, team: "Jacksonville Jaguars", record: "0-4", owner: "" },
+        { rank: 4, team: "Jacksonville Jaguars", record: "0-5", owner: "" },
       ]
     },
     {
@@ -646,8 +645,8 @@ const FNSL_CONFIG = {
       name: "NFC North",
       conference: "NFC",
       teams: [
-        { rank: 1, team: "Green Bay Packers", record: "4-0", owner: "BK_SubjectZero" },
-        { rank: 2, team: "Minnesota Vikings", record: "4-0", owner: "HOT ROD MD 55" },
+        { rank: 1, team: "Minnesota Vikings", record: "4-0", owner: "HOT ROD MD 55" },
+        { rank: 2, team: "Green Bay Packers", record: "4-0", owner: "BK_SubjectZero" },
         { rank: 3, team: "Chicago Bears", record: "3-1", owner: "Chopworld_" },
         { rank: 4, team: "Detroit Lions", record: "1-3", owner: "BryceLovesJesus" },
       ]
@@ -680,7 +679,7 @@ const FNSL_CONFIG = {
   // =========================================================
   standings: {
     afc: [
-      { team: "Tennessee Titans", record: "4-0", owner: "TheCoachoCinco" },
+      { team: "Tennessee Titans", record: "5-0", owner: "TheCoachoCinco" },
       { team: "Houston Texans", record: "3-1", owner: "HighlyAnti" },
       { team: "Buffalo Bills", record: "3-1", owner: "LordWill76358" },
       { team: "Baltimore Ravens", record: "3-1", owner: "firemadman" },
@@ -695,11 +694,11 @@ const FNSL_CONFIG = {
       { team: "Pittsburgh Steelers", record: "0-4", owner: "almoneydmg" },
       { team: "Indianapolis Colts", record: "0-4", owner: "" },
       { team: "Las Vegas Raiders", record: "0-4", owner: "Du5t1n812" },
-      { team: "Jacksonville Jaguars", record: "0-4", owner: "" }
+      { team: "Jacksonville Jaguars", record: "0-5", owner: "" }
     ],
     nfc: [
-      { team: "Green Bay Packers", record: "4-0", owner: "BK_SubjectZero" },
       { team: "Minnesota Vikings", record: "4-0", owner: "HOT ROD MD 55" },
+      { team: "Green Bay Packers", record: "4-0", owner: "BK_SubjectZero" },
       { team: "Arizona Cardinals", record: "3-1", owner: "B dog 5123" },
       { team: "Chicago Bears", record: "3-1", owner: "Chopworld_" },
       { team: "Tampa Bay Buccaneers", record: "3-2", owner: "PSB Beans66" },

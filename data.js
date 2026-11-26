@@ -378,7 +378,7 @@ const FNSL_CONFIG = {
   // =========================================================
   tickerItems: [
     { type: "note", text: "FNSL M27-S3 Week 6 — Watch live on FNSL.TV" },
-    { type: "note", text: "AFC leader: Tennessee Titans (5-0)" },
+    { type: "note", text: "AFC leader: Tennessee Titans (6-0)" },
     { type: "note", text: "NFC leader: Minnesota Vikings (5-0)" },
     { type: "final", text: "WK5 Cardinals 38 @ Patriots 28" },
     { type: "final", text: "WK5 Giants 31 @ Colts 14" },
@@ -396,17 +396,16 @@ const FNSL_CONFIG = {
     { type: "final", text: "WK5 Cowboys 21 @ Eagles 18" },
     { type: "final", text: "WK5 Lions 0 @ Vikings 47" },
     { type: "final", text: "WK5 Browns 34 @ Ravens 27" },
-    { type: "upcoming", text: "WK6 Titans @ Colts" },
     { type: "upcoming", text: "WK6 Broncos @ Buccaneers" },
     { type: "upcoming", text: "WK6 Commanders @ Eagles" },
     { type: "upcoming", text: "WK6 Ravens @ Cowboys" },
     { type: "upcoming", text: "WK6 Bears @ Lions" },
-    { type: "upcoming", text: "WK6 Giants @ Saints" },
     { type: "upcoming", text: "WK6 Raiders @ Dolphins" },
     { type: "upcoming", text: "WK6 Bills @ 49ers" },
+    { type: "upcoming", text: "WK6 Bengals @ Patriots" },
+    { type: "upcoming", text: "WK6 Giants @ Saints" },
     { type: "upcoming", text: "WK6 Jaguars @ Chargers" },
     { type: "upcoming", text: "WK6 Browns @ Chiefs" },
-    { type: "upcoming", text: "WK6 Bengals @ Patriots" },
     { type: "upcoming", text: "WK6 Cardinals @ Seahawks" },
     { type: "note", text: "Defending champ: Atlanta Falcons · BWO" }
   ],
@@ -428,7 +427,7 @@ const FNSL_CONFIG = {
     {
       title: "RUSHING YARDS",
       leaders: [
-        { rank: 1, name: "Chris Johnson", team: "TEN", stat: "1061 YDS · 11 TD" },
+        { rank: 1, name: "Chris Johnson", team: "TEN", stat: "1260 YDS · 14 TD" },
         { rank: 2, name: "Adrian Peterson", team: "MIN", stat: "793 YDS · 11 TD" },
         { rank: 3, name: "Jeremiyah Love", team: "AZ", stat: "696 YDS · 4 TD" },
         { rank: 4, name: "Trey Benson", team: "DEN", stat: "695 YDS · 7 TD" },
@@ -480,9 +479,9 @@ const FNSL_CONFIG = {
       leaders: [
         { rank: 1, name: "Foyesade Oluokun", team: "JAX", stat: "39 TKL" },
         { rank: 2, name: "Trenton Simpson", team: "NE", stat: "38 TKL" },
-        { rank: 3, name: "Kamren Kinchens", team: "JAX", stat: "29 TKL" },
-        { rank: 4, name: "Lorenzo Styles Jr.", team: "NO", stat: "29 TKL" },
-        { rank: 5, name: "Taron Johnson", team: "IND", stat: "29 TKL" }
+        { rank: 3, name: "Taron Johnson", team: "IND", stat: "31 TKL" },
+        { rank: 4, name: "A.J. Haulcy", team: "IND", stat: "30 TKL" },
+        { rank: 5, name: "Kamren Kinchens", team: "JAX", stat: "29 TKL" }
       ]
     },
     {
@@ -610,10 +609,10 @@ const FNSL_CONFIG = {
       name: "AFC South",
       conference: "AFC",
       teams: [
-        { rank: 1, team: "Tennessee Titans", record: "5-0", owner: "TheCoachoCinco" },
+        { rank: 1, team: "Tennessee Titans", record: "6-0", owner: "TheCoachoCinco" },
         { rank: 2, team: "Houston Texans", record: "3-2", owner: "HighlyAnti" },
-        { rank: 3, team: "Indianapolis Colts", record: "0-5", owner: "" },
-        { rank: 4, team: "Jacksonville Jaguars", record: "0-5", owner: "" },
+        { rank: 3, team: "Jacksonville Jaguars", record: "0-5", owner: "" },
+        { rank: 4, team: "Indianapolis Colts", record: "0-6", owner: "" },
       ]
     },
     {
@@ -677,7 +676,7 @@ const FNSL_CONFIG = {
   // =========================================================
   standings: {
     afc: [
-      { team: "Tennessee Titans", record: "5-0", owner: "TheCoachoCinco" },
+      { team: "Tennessee Titans", record: "6-0", owner: "TheCoachoCinco" },
       { team: "Los Angeles Chargers", record: "4-1", owner: "PSB Rhyno" },
       { team: "Kansas City Chiefs", record: "4-1", owner: "TR904" },
       { team: "Denver Broncos", record: "4-1", owner: "vurmiciousknid" },
@@ -691,8 +690,8 @@ const FNSL_CONFIG = {
       { team: "Pittsburgh Steelers", record: "1-4", owner: "almoneydmg" },
       { team: "Cincinnati Bengals", record: "1-4", owner: "CoconutHawk" },
       { team: "Las Vegas Raiders", record: "0-5", owner: "Du5t1n812" },
-      { team: "Indianapolis Colts", record: "0-5", owner: "" },
-      { team: "Jacksonville Jaguars", record: "0-5", owner: "" }
+      { team: "Jacksonville Jaguars", record: "0-5", owner: "" },
+      { team: "Indianapolis Colts", record: "0-6", owner: "" }
     ],
     nfc: [
       { team: "Minnesota Vikings", record: "5-0", owner: "HOT ROD MD 55" },

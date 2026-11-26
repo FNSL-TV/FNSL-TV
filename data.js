@@ -381,10 +381,10 @@ const FNSL_CONFIG = {
     { type: "note", text: "AFC leader: Tennessee Titans (5-0)" },
     { type: "note", text: "NFC leader: Minnesota Vikings (5-0)" },
     { type: "final", text: "WK5 Cardinals 38 @ Patriots 28" },
-    { type: "final", text: "WK5 Steelers 37 @ Bengals 10" },
-    { type: "final", text: "WK5 Bears 27 @ Texans 7" },
-    { type: "final", text: "WK5 49ers 29 @ Rams 28" },
     { type: "final", text: "WK5 Giants 31 @ Colts 14" },
+    { type: "final", text: "WK5 Bears 27 @ Texans 7" },
+    { type: "final", text: "WK5 Steelers 37 @ Bengals 10" },
+    { type: "final", text: "WK5 49ers 29 @ Rams 28" },
     { type: "final", text: "WK5 Seahawks 34 @ Jets 37" },
     { type: "final", text: "WK5 Chiefs 37 @ Saints 10" },
     { type: "final", text: "WK5 Packers 34 @ Commanders 30" },
@@ -396,20 +396,18 @@ const FNSL_CONFIG = {
     { type: "final", text: "WK5 Cowboys 21 @ Eagles 18" },
     { type: "final", text: "WK5 Lions 0 @ Vikings 47" },
     { type: "final", text: "WK5 Browns 34 @ Ravens 27" },
-    { type: "upcoming", text: "WK6 Bears @ Lions" },
-    { type: "upcoming", text: "WK6 Raiders @ Dolphins" },
-    { type: "upcoming", text: "WK6 Bills @ 49ers" },
-    { type: "upcoming", text: "WK6 Cardinals @ Seahawks" },
-    { type: "upcoming", text: "WK6 Commanders @ Eagles" },
     { type: "upcoming", text: "WK6 Titans @ Colts" },
     { type: "upcoming", text: "WK6 Broncos @ Buccaneers" },
-    { type: "upcoming", text: "WK6 Packers @ Jets" },
-    { type: "upcoming", text: "WK6 Browns @ Chiefs" },
-    { type: "upcoming", text: "WK6 Giants @ Saints" },
-    { type: "upcoming", text: "WK6 Jaguars @ Chargers" },
+    { type: "upcoming", text: "WK6 Commanders @ Eagles" },
     { type: "upcoming", text: "WK6 Ravens @ Cowboys" },
+    { type: "upcoming", text: "WK6 Bears @ Lions" },
+    { type: "upcoming", text: "WK6 Giants @ Saints" },
+    { type: "upcoming", text: "WK6 Raiders @ Dolphins" },
+    { type: "upcoming", text: "WK6 Bills @ 49ers" },
+    { type: "upcoming", text: "WK6 Jaguars @ Chargers" },
+    { type: "upcoming", text: "WK6 Browns @ Chiefs" },
     { type: "upcoming", text: "WK6 Bengals @ Patriots" },
-    { type: "upcoming", text: "WK6 Falcons @ Panthers" },
+    { type: "upcoming", text: "WK6 Cardinals @ Seahawks" },
     { type: "note", text: "Defending champ: Atlanta Falcons · BWO" }
   ],
 
@@ -420,11 +418,11 @@ const FNSL_CONFIG = {
     {
       title: "PASSING YARDS",
       leaders: [
-        { rank: 1, name: "Jalen Milroe", team: "SEA", stat: "1496 YDS · 16 TD" },
-        { rank: 2, name: "Taylen Green", team: "CLE", stat: "1473 YDS · 15 TD" },
-        { rank: 3, name: "Jaxson Dart", team: "NYG", stat: "1462 YDS · 12 TD" },
-        { rank: 4, name: "Nick Curtis", team: "CIN", stat: "1435 YDS · 13 TD" },
-        { rank: 5, name: "C.J. Stroud", team: "HOU", stat: "1398 YDS · 10 TD" }
+        { rank: 1, name: "Jordan Love", team: "GB", stat: "1627 YDS · 17 TD" },
+        { rank: 2, name: "Cam Newton", team: "CAR", stat: "1550 YDS · 10 TD" },
+        { rank: 3, name: "Jalen Milroe", team: "SEA", stat: "1496 YDS · 16 TD" },
+        { rank: 4, name: "Taylen Green", team: "CLE", stat: "1473 YDS · 15 TD" },
+        { rank: 5, name: "Jaxson Dart", team: "NYG", stat: "1462 YDS · 12 TD" }
       ]
     },
     {
@@ -434,7 +432,7 @@ const FNSL_CONFIG = {
         { rank: 2, name: "Adrian Peterson", team: "MIN", stat: "793 YDS · 11 TD" },
         { rank: 3, name: "Jeremiyah Love", team: "AZ", stat: "696 YDS · 4 TD" },
         { rank: 4, name: "Trey Benson", team: "DEN", stat: "695 YDS · 7 TD" },
-        { rank: 5, name: "De'Von Achane", team: "MIA", stat: "518 YDS · 2 TD" }
+        { rank: 5, name: "Bijan Robinson", team: "ATL", stat: "546 YDS · 5 TD" }
       ]
     },
     {
@@ -443,8 +441,8 @@ const FNSL_CONFIG = {
         { rank: 1, name: "Rashee Rice", team: "LAR", stat: "528 YDS · 8 TD" },
         { rank: 2, name: "Nico Collins", team: "HOU", stat: "525 YDS · 3 TD" },
         { rank: 3, name: "Eddie Kennison", team: "KC", stat: "490 YDS · 4 TD" },
-        { rank: 4, name: "Percy Harvin", team: "SEA", stat: "480 YDS · 4 TD" },
-        { rank: 5, name: "Joshua Denmark", team: "CLE", stat: "466 YDS · 5 TD" }
+        { rank: 4, name: "Kevin Santos", team: "CAR", stat: "486 YDS · 4 TD" },
+        { rank: 5, name: "Christian Watson", team: "GB", stat: "481 YDS · 6 TD" }
       ]
     },
     {
@@ -454,7 +452,7 @@ const FNSL_CONFIG = {
         { rank: 2, name: "Trey McBride", team: "AZ", stat: "354 YDS · 2 TD" },
         { rank: 3, name: "Rashawn Williams", team: "NE", stat: "347 YDS · 3 TD" },
         { rank: 4, name: "Theo Johnson", team: "NYG", stat: "304 YDS · 2 TD" },
-        { rank: 5, name: "Harold Fannin Jr", team: "CLE", stat: "288 YDS · 1 TD" }
+        { rank: 5, name: "Darren Waller", team: "CAR", stat: "292 YDS · 3 TD" }
       ]
     },
     {
@@ -463,7 +461,7 @@ const FNSL_CONFIG = {
         { rank: 1, name: "Calijah Kancey", team: "TB", stat: "10 SACKS" },
         { rank: 2, name: "Byron Young", team: "LAR", stat: "8.5 SACKS" },
         { rank: 3, name: "Jared Verse", team: "CLE", stat: "8 SACKS" },
-        { rank: 4, name: "Micah Parsons", team: "GB", stat: "6.5 SACKS" },
+        { rank: 4, name: "Micah Parsons", team: "GB", stat: "8 SACKS" },
         { rank: 5, name: "Nik Bonitto", team: "DEN", stat: "6.5 SACKS" }
       ]
     },
@@ -473,8 +471,8 @@ const FNSL_CONFIG = {
         { rank: 1, name: "Bryce Brackens", team: "LAC", stat: "5 INT" },
         { rank: 2, name: "Derek Stingley Jr", team: "HOU", stat: "4 INT" },
         { rank: 3, name: "Dillon Jefferson", team: "TEN", stat: "4 INT" },
-        { rank: 4, name: "Andrew Mukuba", team: "PHI", stat: "3 INT" },
-        { rank: 5, name: "Cooper DeJean", team: "PHI", stat: "3 INT" }
+        { rank: 4, name: "Andre Cisco", team: "NYJ", stat: "3 INT" },
+        { rank: 5, name: "Andrew Mukuba", team: "PHI", stat: "3 INT" }
       ]
     },
     {
@@ -490,11 +488,11 @@ const FNSL_CONFIG = {
     {
       title: "KICKING",
       leaders: [
-        { rank: 1, name: "Eddy Pineiro", team: "SF", stat: "9/9 FG" },
-        { rank: 2, name: "Joshua Karty", team: "CHI", stat: "8/10 FG" },
-        { rank: 3, name: "Ben Tolbert", team: "DET", stat: "8/9 FG" },
-        { rank: 4, name: "Wil Lutz", team: "DEN", stat: "8/9 FG" },
-        { rank: 5, name: "Andres Borregales", team: "NE", stat: "8/8 FG" }
+        { rank: 1, name: "Ryan Fitzgerald", team: "CAR", stat: "10/10 FG" },
+        { rank: 2, name: "Chase McLaughlin", team: "NYJ", stat: "9/9 FG" },
+        { rank: 3, name: "Eddy Pineiro", team: "SF", stat: "9/9 FG" },
+        { rank: 4, name: "Joshua Karty", team: "CHI", stat: "8/10 FG" },
+        { rank: 5, name: "Ben Tolbert", team: "DET", stat: "8/9 FG" }
       ]
     }
   ],
@@ -593,7 +591,7 @@ const FNSL_CONFIG = {
         { rank: 1, team: "Buffalo Bills", record: "3-2", owner: "LordWill76358" },
         { rank: 2, team: "Miami Dolphins", record: "3-2", owner: "Coolcam 1324" },
         { rank: 3, team: "New England Patriots", record: "3-2", owner: "primetimefs2" },
-        { rank: 4, team: "New York Jets", record: "2-3", owner: "YoungMosesTV" },
+        { rank: 4, team: "New York Jets", record: "3-3", owner: "YoungMosesTV" },
       ]
     },
     {
@@ -646,7 +644,7 @@ const FNSL_CONFIG = {
       conference: "NFC",
       teams: [
         { rank: 1, team: "Minnesota Vikings", record: "5-0", owner: "HOT ROD MD 55" },
-        { rank: 2, team: "Green Bay Packers", record: "5-0", owner: "BK_SubjectZero" },
+        { rank: 2, team: "Green Bay Packers", record: "5-1", owner: "BK_SubjectZero" },
         { rank: 3, team: "Chicago Bears", record: "4-1", owner: "Chopworld_" },
         { rank: 4, team: "Detroit Lions", record: "1-4", owner: "BryceLovesJesus" },
       ]
@@ -657,8 +655,8 @@ const FNSL_CONFIG = {
       conference: "NFC",
       teams: [
         { rank: 1, team: "Tampa Bay Buccaneers", record: "3-2", owner: "PSB Beans66" },
-        { rank: 2, team: "Atlanta Falcons", record: "2-3", owner: "IamBwo4life" },
-        { rank: 3, team: "Carolina Panthers", record: "2-3", owner: "CountrySwag77" },
+        { rank: 2, team: "Atlanta Falcons", record: "3-3", owner: "IamBwo4life" },
+        { rank: 3, team: "Carolina Panthers", record: "2-4", owner: "CountrySwag77" },
         { rank: 4, team: "New Orleans Saints", record: "1-4", owner: "amazingcar678" },
       ]
     },
@@ -689,7 +687,7 @@ const FNSL_CONFIG = {
       { team: "Baltimore Ravens", record: "3-2", owner: "firemadman" },
       { team: "Houston Texans", record: "3-2", owner: "HighlyAnti" },
       { team: "New England Patriots", record: "3-2", owner: "primetimefs2" },
-      { team: "New York Jets", record: "2-3", owner: "YoungMosesTV" },
+      { team: "New York Jets", record: "3-3", owner: "YoungMosesTV" },
       { team: "Pittsburgh Steelers", record: "1-4", owner: "almoneydmg" },
       { team: "Cincinnati Bengals", record: "1-4", owner: "CoconutHawk" },
       { team: "Las Vegas Raiders", record: "0-5", owner: "Du5t1n812" },
@@ -698,16 +696,16 @@ const FNSL_CONFIG = {
     ],
     nfc: [
       { team: "Minnesota Vikings", record: "5-0", owner: "HOT ROD MD 55" },
-      { team: "Green Bay Packers", record: "5-0", owner: "BK_SubjectZero" },
+      { team: "Green Bay Packers", record: "5-1", owner: "BK_SubjectZero" },
       { team: "Arizona Cardinals", record: "4-1", owner: "B dog 5123" },
       { team: "Chicago Bears", record: "4-1", owner: "Chopworld_" },
       { team: "New York Giants", record: "3-1-1", owner: "Mr smokie11" },
       { team: "Tampa Bay Buccaneers", record: "3-2", owner: "PSB Beans66" },
-      { team: "Dallas Cowboys", record: "2-3", owner: "columbuskid614" },
-      { team: "Atlanta Falcons", record: "2-3", owner: "IamBwo4life" },
+      { team: "Atlanta Falcons", record: "3-3", owner: "IamBwo4life" },
       { team: "San Francisco 49ers", record: "2-3", owner: "Jay Sixz" },
+      { team: "Dallas Cowboys", record: "2-3", owner: "columbuskid614" },
       { team: "Washington Commanders", record: "2-3", owner: "" },
-      { team: "Carolina Panthers", record: "2-3", owner: "CountrySwag77" },
+      { team: "Carolina Panthers", record: "2-4", owner: "CountrySwag77" },
       { team: "Philadelphia Eagles", record: "1-3-1", owner: "stu07172008" },
       { team: "Los Angeles Rams", record: "1-4", owner: "" },
       { team: "New Orleans Saints", record: "1-4", owner: "amazingcar678" },
